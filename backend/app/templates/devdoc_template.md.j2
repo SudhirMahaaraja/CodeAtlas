@@ -1,0 +1,83 @@
+# Architecture & Developer Documentation
+
+<p align="center">
+  <strong>Statically Compiled Architecture, Control Flows, and API Specification</strong>
+</p>
+
+---
+
+## 🏗️ System Architecture & Import Graph
+The following Mermaid diagram displays the import relationships and internal dependencies between modules in the codebase.
+
+```mermaid
+graph TD
+{% if project.import_graph and project.import_graph.items()|length > 0 %}
+  {% for source, targets in project.import_graph.items() %}
+    {% for target in targets %}
+      {{ source | replace("/", "_") | replace(".", "_") | replace("-", "_") }}["{{ source }}"] --> {{ target | replace("/", "_") | replace(".", "_") | replace("-", "_") }}["{{ target }}"]
+    {% endfor %}
+  {% endfor %}
+{% else %}
+  subgraph Simple Flow
+    Entry["Entrypoint"] --> Code["Modules / Core Logic"]
+  end
+{% endif %}
+```
+
+---
+
+## 📊 Summary Metrics
+- **Total Modules:** {{ project.files | length }}
+- **Total Classes:** {{ total_classes }}
+- **Total Functions:** {{ total_functions }}
+- **Total Lines of Code:** {{ total_loc }}
+
+---
+
+## 📁 File Reference Catalog
+
+{% for file in project.files %}
+### 📄 `{{ file.path }}`
+- **Language/Type:** {{ file.language | upper }}
+- **Lines of Code:** {{ file.loc }}
+{% if file.module_docstring %}
+- **Module Overview:**
+  > {{ file.module_docstring }}
+{% endif %}
+
+{% if file.classes %}
+#### 🏛️ Classes
+
+| Class Name | Line | Inherits From | Description |
+|---|---|---|---|
+{% for cls in file.classes %}
+| `{{ cls.name }}` | {{ cls.line_number }} | {% if cls.base_classes %}`{{ cls.base_classes | join(", ") }}`{% else %}None{% endif %} | {{ cls.docstring or "No description." }} |
+{% endfor %}
+
+{% for cls in file.classes %}
+{% if cls.methods %}
+##### Methods inside `{{ cls.name }}`
+| Method Name | Line | Async | Arguments | Return Type |
+|---|---|---|---|---|
+{% for method in cls.methods %}
+| `{{ method.name }}` | {{ method.line_number }} | {{ method.is_async }} | {% if method.params %}{% for param in method.params %}`{{ param.name }}`{% if param.type_hint %}: {{ param.type_hint }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}None{% endif %} | `{{ method.return_type or 'Any' }}` |
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if file.functions %}
+#### ⚙️ Functions
+
+| Function Name | Line | Async | Arguments | Return Type | Description |
+|---|---|---|---|---|---|
+{% for func in file.functions %}
+| `{{ func.name }}` | {{ func.line_number }} | {{ func.is_async }} | {% if func.params %}{% for param in func.params %}`{{ param.name }}`{% if param.type_hint %}: {{ param.type_hint }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}None{% endif %} | `{{ func.return_type or 'Any' }}` | {{ func.docstring.split('\n')[0] if func.docstring else "No description." }} |
+{% endfor %}
+{% endif %}
+
+---
+{% endfor %}
+
+---
+*DEVELOPER.md generated automatically by [CodeAtlas](https://github.com/SudhirMahaaraja/CodeAtlas) with zero LLM calls.*

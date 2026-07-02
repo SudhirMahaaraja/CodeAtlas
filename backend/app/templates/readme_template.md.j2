@@ -1,0 +1,137 @@
+# {{ project.name | title_case }}
+
+<p align="center">
+  <strong>Statically Analyzed & Formatted Codebase Documentation</strong>
+</p>
+
+<p align="center">
+  {% if tech_keywords %}
+  {% for tech in tech_keywords[:8] %}
+  <code>{{ tech | upper }}</code> &nbsp;
+  {% endfor %}
+  {% endif %}
+</p>
+
+---
+
+## 📋 Overview
+{% if project.files and project.files[0].module_docstring %}
+{{ project.files[0].module_docstring }}
+{% else %}
+This is a standard codebase for <strong>{{ project.name | title_case }}</strong>, parsed and generated automatically by CodeAtlas.
+{% endif %}
+
+---
+
+## 🧠 Key Features
+{% if features %}
+{% for feature in features %}
+- **{{ feature.name }}**: {{ feature.description }}
+{% endfor %}
+{% else %}
+- **Static AST Parsing**: Automated extraction of imports, modules, classes, and decorators.
+- **Dependency Detection**: Fully parsed library lists from packages.
+- **Architecture Mapping**: Mermaid import charts dynamically compiled.
+{% endif %}
+
+---
+
+## 📁 Repository Structure
+```text
+{{ folder_tree }}
+```
+
+### 🔑 Key Files Map
+| Path | Purpose |
+|---|---|
+{% for kf in key_files %}
+| `{{ kf.path }}` | {{ kf.purpose }} |
+{% endfor %}
+
+---
+
+## ⚙️ Tech Stack & Dependencies
+
+- **Language Runtime:** Python {{ python_version }}
+- **License:** {{ license }}
+
+### 📦 Third-party Packages
+{% if project.dependencies %}
+| Package | Version | Source |
+|---|---|---|
+{% for dep in project.dependencies %}
+| `{{ dep.name }}` | `{{ dep.version or '*' }}` | {{ dep.source }} |
+{% endfor %}
+{% else %}
+No third-party packages detected.
+{% endif %}
+
+---
+
+{% if env_vars %}
+## 🔐 Environment Variables
+Configure these in your `.env` file:
+
+| Name | Example Value | Description |
+|---|---|---|
+{% for ev in env_vars %}
+| `{{ ev.name }}` | `{{ ev.example_value }}` | {{ ev.description or 'Custom environment variable' }} |
+{% endfor %}
+
+---
+{% endif %}
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Python `{{ python_version }}`
+{% if has_package_json %}
+- Node.js (with npm or yarn)
+{% endif %}
+
+### Installation & Run
+
+#### Backend Setup
+1. Clone / extract the repository.
+2. Initialize virtual environment:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   ```
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Run the application:
+   {% if main_module %}
+   ```bash
+   uvicorn {{ main_module }}:app --reload
+   ```
+   {% else %}
+   ```bash
+   python main.py
+   ```
+   {% endif %}
+
+{% if has_package_json %}
+#### Frontend Setup
+1. Navigate to the project root / frontend dir:
+   ```bash
+   npm install
+   ```
+2. Run development server:
+   ```bash
+   npm run dev
+   ```
+{% endif %}
+
+{% if has_tests %}
+### 🧪 Running Tests
+Execute test suites using the configured framework:
+```bash
+python -m {{ test_framework }}
+```
+{% endif %}
+
+---
+*README generated automatically by [CodeAtlas](https://github.com/SudhirMahaaraja/CodeAtlas) with zero LLM calls.*

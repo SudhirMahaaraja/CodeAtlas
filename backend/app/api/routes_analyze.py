@@ -51,7 +51,7 @@ def run_analysis_task(job_id: str, workspace_path: str, source_type: str, source
         project_model = ModelBuilder.build(workspace_path, project_name)
         
         # Generate docs
-        readme_md = ReadmeGenerator.generate(project_model)
+        readme_md = ReadmeGenerator.generate(project_model, workspace_path)
         devdoc_md = DevdocGenerator.generate(project_model)
         
         # Save to database
