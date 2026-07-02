@@ -1,0 +1,2 @@
+# CodeAtlas
+A web app that statically analyzes a codebase (Python + HTML/CSS/JS/React) from a ZIP or GitHub repo and generates two documents — a README (overview, setup) and a DEVELOPER.md (architecture, file-by-file breakdown, code relationships) — using only parsing and rule-based heuristics. No AI/LLM calls, ever, at runtime.

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CodeAtlas - Analysis Dashboard</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@450;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"on-primary-container": "#003f2b", "on-secondary": "#063827", "on-surface": "#dde4de", "tertiary-fixed-dim": "#ffb3af", "on-primary": "#003826", "on-tertiary-fixed-variant": "#812627", "inverse-surface": "#dde4de", "error-container": "#93000a", "surface-container-low": "#171d19", "on-secondary-fixed-variant": "#224f3c", "outline-variant": "#3d4a43", "on-tertiary-fixed": "#410005", "on-background": "#dde4de", background: "#0e1511", "primary-fixed": "#79fac4", "surface-container-highest": "#303632", "surface-tint": "#5addaa", "on-primary-fixed-variant": "#005139", "on-error-container": "#ffdad6", "inverse-on-surface": "#2b322e", secondary: "#a1d1b8", "surface-dim": "#0e1511", "on-tertiary": "#620e13", surface: "#0e1511", outline: "#86948b", tertiary: "#ffb3af", "on-primary-fixed": "#002115", "surface-container-lowest": "#09100c", "on-error": "#690005", "secondary-fixed": "#bcedd4", "tertiary-container": "#f37c78", "primary-fixed-dim": "#5addaa", "on-tertiary-container": "#6b1519", error: "#ffb4ab", "secondary-fixed-dim": "#a1d1b8", "on-secondary-container": "#90bfa7", "surface-container-high": "#252b28", "tertiary-fixed": "#ffdad7", "surface-variant": "#303632", primary: "#5addaa", "surface-bright": "#343b37", "surface-container": "#1a211d", "secondary-container": "#224f3c", "inverse-primary": "#006c4c", "on-surface-variant": "#bccac0", "on-secondary-fixed": "#002115", "primary-container": "#24b484"}, borderRadius: {DEFAULT: "0.5rem", lg: "1rem", xl: "1.5rem", full: "9999px"}, spacing: {base: "4px", "container-max": "1440px", lg: "24px", md: "16px", "sidebar-width": "280px", xs: "4px", xl: "40px", sm: "8px"}, fontFamily: {"code-md": ["JetBrains Mono"], "code-sm": ["JetBrains Mono"], "body-md": ["Inter"], "headline-lg": ["Inter"], "headline-md": ["Inter"], display: ["Plus Jakarta Sans"], "label-caps": ["JetBrains Mono"], "body-lg": ["Inter"], headline: ["Plus Jakarta Sans"], body: ["Plus Jakarta Sans"], label: ["Plus Jakarta Sans"]}, fontSize: {"code-md": ["14px", {lineHeight: "20px", fontWeight: "450"}], "code-sm": ["12px", {lineHeight: "16px", fontWeight: "450"}], "body-md": ["16px", {lineHeight: "24px", fontWeight: "400"}], "headline-lg": ["32px", {lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "600"}], "headline-md": ["24px", {lineHeight: "32px", fontWeight: "600"}], display: ["48px", {lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700"}], "label-caps": ["11px", {lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "600"}], "body-lg": ["18px", {lineHeight: "28px", fontWeight: "400"}]}}}};</script>
+<style>
+        /* Terminal cursor blink animation */
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .cursor-blink {
+            animation: blink 1s step-end infinite;
+        }
+        
+        /* Pulse animation for progress */
+        @keyframes pulse-emerald {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .animate-pulse-emerald {
+            animation: pulse-emerald 2s infinite;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 flex items-center justify-between px-lg h-16 bg-surface/80 backdrop-blur-md border-b border-outline-variant font-body-md text-body-md">
+<!-- Brand -->
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md font-bold text-primary">CodeAtlas</span>
+</div>
+<!-- Navigation Links -->
+<div class="hidden md:flex items-center gap-lg h-full">
+<a class="h-full flex items-center text-primary border-b-2 border-primary pb-1" href="#">Features</a>
+<a class="h-full flex items-center text-on-surface-variant hover:text-primary transition-colors" href="#">Pricing</a>
+<a class="h-full flex items-center text-on-surface-variant hover:text-primary transition-colors" href="#">Docs</a>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-md">
+<button class="hidden md:block px-4 py-2 border border-outline-variant rounded-DEFAULT text-on-surface hover:text-primary transition-colors">Sign In</button>
+<button class="px-4 py-2 bg-primary text-background font-semibold rounded-DEFAULT hover:bg-primary-container transition-colors">New Analysis</button>
+<div class="flex items-center gap-sm ml-sm text-on-surface-variant">
+<button class="hover:text-primary transition-colors flex items-center justify-center p-sm">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+<button class="hover:text-primary transition-colors flex items-center justify-center p-sm">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-grow pt-24 px-md md:px-lg pb-lg max-w-container-max mx-auto w-full flex flex-col gap-lg">
+<!-- Header / Progress Status -->
+<div class="flex flex-col gap-sm">
+<div class="flex items-center justify-between">
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Analysis Dashboard</h1>
+<span class="font-code-md text-code-md text-primary animate-pulse">85% Complete</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary relative w-[85%] rounded-full">
+<!-- Glow effect on progress bar -->
+<div class="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-r from-transparent to-white opacity-30"></div>
+</div>
+</div>
+<p class="font-code-sm text-code-sm text-on-surface-variant mt-xs">Analyzing backend architecture...</p>
+</div>
+<!-- Dashboard Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-md items-start">
+<!-- Left Column: Terminal Output (Bento Span 8) -->
+<div class="lg:col-span-8 flex flex-col gap-md">
+<div class="bg-surface-container rounded-lg border border-outline-variant overflow-hidden h-[400px] flex flex-col shadow-lg">
+<!-- Terminal Header -->
+<div class="bg-surface-container-high border-b border-outline-variant px-md py-sm flex items-center justify-between">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-size: 18px;">terminal</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant uppercase tracking-wider">Analysis Logs</span>
+</div>
+<div class="flex gap-xs">
+<div class="w-2 h-2 rounded-full bg-outline-variant"></div>
+<div class="w-2 h-2 rounded-full bg-outline-variant"></div>
+<div class="w-2 h-2 rounded-full bg-outline-variant"></div>
+</div>
+</div>
+<!-- Terminal Body -->
+<div class="flex-grow p-md font-code-md text-code-md bg-[#020617] overflow-y-auto" id="terminal-output">
+<div class="text-on-surface-variant mb-xs">[09:41:22] Initializing static analysis engine v2.4.1... <span class="text-primary">OK</span></div>
+<div class="text-on-surface-variant mb-xs">[09:41:23] Loading project structure... <span class="text-primary">OK</span></div>
+<div class="text-on-surface-variant mb-xs">[09:41:25] Parsing backend/app/main.py... <span class="text-primary">OK</span></div>
+<div class="text-secondary mb-xs">[09:41:26] ℹ️ Detected FastAPI framework in main.py</div>
+<div class="text-on-surface-variant mb-xs">[09:41:28] Parsing backend/app/models.py... <span class="text-primary">OK</span></div>
+<div class="text-secondary mb-xs">[09:41:29] ℹ️ Detected Pydantic models (12 found)</div>
+<div class="text-on-surface-variant mb-xs">[09:41:31] Building import graph... <span class="text-primary">OK</span></div>
+<div class="text-on-surface-variant mb-xs">[09:41:35] Analyzing dependency resolution... <span class="text-primary">OK</span></div>
+<div class="text-on-surface mb-xs">[09:41:38] Analyzing API routes... <span class="cursor-blink bg-primary w-2 h-4 inline-block align-middle ml-xs"></span></div>
+</div>
+</div>
+<!-- Quick Stats row below terminal -->
+<div class="grid grid-cols-3 gap-md">
+<div class="bg-surface rounded-lg border border-outline-variant p-md flex flex-col items-center justify-center">
+<span class="font-display text-display text-primary">142</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Files Parsed</span>
+</div>
+<div class="bg-surface rounded-lg border border-outline-variant p-md flex flex-col items-center justify-center">
+<span class="font-display text-display text-primary">8</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Endpoints Found</span>
+</div>
+<div class="bg-surface rounded-lg border border-outline-variant p-md flex flex-col items-center justify-center">
+<span class="font-display text-display text-secondary">0</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Issues Detected</span>
+</div>
+</div>
+</div>
+<!-- Right Column: Context & Stack (Bento Span 4) -->
+<div class="lg:col-span-4 flex flex-col gap-md">
+<!-- Stack Detection Card -->
+<div class="bg-surface rounded-lg border border-outline-variant p-md hover:border-primary transition-colors group">
+<div class="flex items-center justify-between border-b border-outline-variant pb-sm mb-md">
+<h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-sm">
+<span class="material-symbols-outlined text-secondary">stacks</span>
+                            Detected Stack
+                        </h3>
+</div>
+<div class="flex flex-col gap-sm">
+<!-- Python -->
+<div class="flex items-center gap-md p-sm bg-surface-container-low rounded">
+<div class="w-10 h-10 rounded bg-surface-container flex items-center justify-center border border-outline-variant">
+<!-- Using text icon for Python as placeholder -->
+<span class="font-code-lg font-bold text-secondary">Py</span>
+</div>
+<div>
+<div class="font-body-md text-on-surface font-semibold">Python</div>
+<div class="font-code-sm text-code-sm text-on-surface-variant">v3.10+</div>
+</div>
+</div>
+<!-- FastAPI -->
+<div class="flex items-center gap-md p-sm bg-surface-container-low rounded">
+<div class="w-10 h-10 rounded bg-surface-container flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-primary">api</span>
+</div>
+<div>
+<div class="font-body-md text-on-surface font-semibold">FastAPI</div>
+<div class="font-code-sm text-code-sm text-on-surface-variant">Web Framework</div>
+</div>
+</div>
+<!-- Pydantic -->
+<div class="flex items-center gap-md p-sm bg-surface-container-low rounded">
+<div class="w-10 h-10 rounded bg-surface-container flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-tertiary">data_object</span>
+</div>
+<div>
+<div class="font-body-md text-on-surface font-semibold">Pydantic</div>
+<div class="font-code-sm text-code-sm text-on-surface-variant">Data Validation</div>
+</div>
+</div>
+</div>
+</div>
+<!-- File Tree Card -->
+<div class="bg-surface rounded-lg border border-outline-variant p-md flex-grow h-[300px] flex flex-col">
+<div class="flex items-center justify-between border-b border-outline-variant pb-sm mb-md">
+<h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-sm">
+<span class="material-symbols-outlined text-on-surface-variant">folder_open</span>
+                            Processing Queue
+                        </h3>
+</div>
+<div class="flex-grow overflow-y-auto font-code-sm text-code-sm flex flex-col gap-xs">
+<!-- File item completed -->
+<div class="flex items-center gap-sm text-on-surface opacity-70">
+<span class="material-symbols-outlined text-primary" style="font-size: 16px;">check_circle</span>
+<span class="material-symbols-outlined text-on-surface-variant" style="font-size: 16px;">folder</span>
+<span>backend/app/</span>
+</div>
+<!-- File item completed -->
+<div class="flex items-center gap-sm pl-md text-on-surface opacity-70">
+<span class="material-symbols-outlined text-primary" style="font-size: 16px;">check_circle</span>
+<span class="material-symbols-outlined text-on-surface-variant" style="font-size: 16px;">description</span>
+<span>main.py</span>
+</div>
+<!-- File item completed -->
+<div class="flex items-center gap-sm pl-md text-on-surface opacity-70">
+<span class="material-symbols-outlined text-primary" style="font-size: 16px;">check_circle</span>
+<span class="material-symbols-outlined text-on-surface-variant" style="font-size: 16px;">description</span>
+<span>models.py</span>
+</div>
+<!-- File item active -->
+<div class="flex items-center gap-sm pl-md text-primary bg-primary-container/10 p-1 rounded border-l-2 border-primary">
+<span class="material-symbols-outlined animate-spin" style="font-size: 16px;">sync</span>
+<span class="material-symbols-outlined" style="font-size: 16px;">description</span>
+<span>routes.py</span>
+</div>
+<!-- File item pending -->
+<div class="flex items-center gap-sm pl-md text-on-surface-variant">
+<span class="material-symbols-outlined" style="font-size: 16px; visibility: hidden;">check_circle</span>
+<span class="material-symbols-outlined" style="font-size: 16px;">description</span>
+<span>database.py</span>
+</div>
+<!-- File item pending -->
+<div class="flex items-center gap-sm pl-md text-on-surface-variant">
+<span class="material-symbols-outlined" style="font-size: 16px; visibility: hidden;">check_circle</span>
+<span class="material-symbols-outlined" style="font-size: 16px;">description</span>
+<span>utils.py</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Simple script to auto-scroll terminal if needed for visual effect
+        const terminal = document.getElementById('terminal-output');
+        if (terminal) {
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+    </script>
+</body></html>

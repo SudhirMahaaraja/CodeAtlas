@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Documentation Viewer - CodeAtlas</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@450;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"on-primary-container": "#003f2b", "on-secondary": "#063827", "on-surface": "#dde4de", "tertiary-fixed-dim": "#ffb3af", "on-primary": "#003826", "on-tertiary-fixed-variant": "#812627", "inverse-surface": "#dde4de", "error-container": "#93000a", "surface-container-low": "#171d19", "on-secondary-fixed-variant": "#224f3c", "outline-variant": "#3d4a43", "on-tertiary-fixed": "#410005", "on-background": "#dde4de", background: "#0e1511", "primary-fixed": "#79fac4", "surface-container-highest": "#303632", "surface-tint": "#5addaa", "on-primary-fixed-variant": "#005139", "on-error-container": "#ffdad6", "inverse-on-surface": "#2b322e", secondary: "#a1d1b8", "surface-dim": "#0e1511", "on-tertiary": "#620e13", surface: "#0e1511", outline: "#86948b", tertiary: "#ffb3af", "on-primary-fixed": "#002115", "surface-container-lowest": "#09100c", "on-error": "#690005", "secondary-fixed": "#bcedd4", "tertiary-container": "#f37c78", "primary-fixed-dim": "#5addaa", "on-tertiary-container": "#6b1519", error: "#ffb4ab", "secondary-fixed-dim": "#a1d1b8", "on-secondary-container": "#90bfa7", "surface-container-high": "#252b28", "tertiary-fixed": "#ffdad7", "surface-variant": "#303632", primary: "#5addaa", "surface-bright": "#343b37", "surface-container": "#1a211d", "secondary-container": "#224f3c", "inverse-primary": "#006c4c", "on-surface-variant": "#bccac0", "on-secondary-fixed": "#002115", "primary-container": "#24b484"}, borderRadius: {DEFAULT: "0.5rem", lg: "1rem", xl: "1.5rem", full: "9999px"}, spacing: {base: "4px", "container-max": "1440px", lg: "24px", md: "16px", "sidebar-width": "280px", xs: "4px", xl: "40px", sm: "8px"}, fontFamily: {"code-md": ["JetBrains Mono"], "code-sm": ["JetBrains Mono"], "body-md": ["Inter"], "headline-lg": ["Inter"], "headline-md": ["Inter"], display: ["Plus Jakarta Sans"], "label-caps": ["JetBrains Mono"], "body-lg": ["Inter"], headline: ["Plus Jakarta Sans"], body: ["Plus Jakarta Sans"], label: ["Plus Jakarta Sans"]}, fontSize: {"code-md": ["14px", {lineHeight: "20px", fontWeight: "450"}], "code-sm": ["12px", {lineHeight: "16px", fontWeight: "450"}], "body-md": ["16px", {lineHeight: "24px", fontWeight: "400"}], "headline-lg": ["32px", {lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "600"}], "headline-md": ["24px", {lineHeight: "32px", fontWeight: "600"}], display: ["48px", {lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700"}], "label-caps": ["11px", {lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "600"}], "body-lg": ["18px", {lineHeight: "28px", fontWeight: "400"}]}}}};</script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col antialiased">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 flex items-center justify-between px-lg h-16 bg-surface/80 backdrop-blur-md border-b border-outline-variant text-primary font-body-md">
+<div class="flex items-center gap-lg">
+<div class="font-headline-md text-headline-md font-bold text-primary">CodeAtlas</div>
+<nav class="hidden md:flex gap-lg h-full">
+<a class="h-full flex items-center text-on-surface-variant hover:text-primary transition-colors" href="#">Features</a>
+<a class="h-full flex items-center text-on-surface-variant hover:text-primary transition-colors" href="#">Pricing</a>
+<a class="h-full flex items-center text-primary border-b-2 border-primary pb-1" href="#">Docs</a>
+</nav>
+</div>
+<div class="flex-1 max-w-md mx-lg hidden md:block">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-md py-sm pl-10 pr-4 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all font-body-md text-body-md placeholder:text-on-surface-variant" placeholder="Search documentation..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="text-on-surface-variant hover:text-primary transition-colors hidden sm:block">Sign In</button>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-md font-body-md font-semibold hover:opacity-90 transition-opacity">New Analysis</button>
+<div class="flex items-center gap-sm ml-sm text-on-surface-variant">
+<button class="hover:text-primary transition-colors flex items-center justify-center p-1"><span class="material-symbols-outlined">account_circle</span></button>
+<button class="hover:text-primary transition-colors flex items-center justify-center p-1"><span class="material-symbols-outlined">settings</span></button>
+</div>
+</div>
+</header>
+<div class="flex flex-1 pt-16">
+<!-- SideNavBar -->
+<aside class="hidden md:flex flex-col fixed left-0 top-16 h-[calc(100vh-64px)] w-sidebar-width z-40 py-md bg-surface-container-low border-r border-outline-variant font-label-caps text-label-caps text-primary">
+<div class="px-md mb-lg">
+<div class="flex items-center gap-sm mb-2">
+<img class="w-8 h-8 rounded bg-surface" data-alt="A stylized minimalist geometric icon representing a software project, composed of interconnected glowing cyan and emerald neon lines on a deep black background, technical, sharp, crisp vector style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYDoomDwyyOj2Lv21Ayr40buDTmD3YF5nl-UGnWJPjpOKiyT1LaAnx6hB0NJkfGAfB5szy8lvaSqlddjaC2ez237inqhEcuaDp7BdxOy-QtxnYikHgyx3qw7fiXq_3e8WMHPC-H8lcou215DX_Qka6g6lMie3JPfSdwTArYYNkhpefnh7rnVZg_k0LAkCIGOp3jgMM7EwfNIaSHcqk-XkKKunj6THZM_3E9hI1HMgYUpzlKaS4899R1cAfPZn1X-QbrubwtYNEypPv"/>
+<div>
+<div class="font-headline-md text-headline-md text-primary leading-tight text-sm">Project Alpha</div>
+<div class="text-on-surface-variant text-xs opacity-80">React/Node.js Analysis</div>
+</div>
+</div>
+</div>
+<div class="px-md mb-md">
+<button class="w-full flex items-center justify-center gap-sm bg-surface border border-outline-variant text-on-surface hover:border-primary transition-colors py-2 rounded-md">
+<span class="material-symbols-outlined text-sm">download</span>
+                    Export PDF
+                </button>
+</div>
+<nav class="flex-1 overflow-y-auto mt-sm">
+<div class="px-md mb-2 text-on-surface-variant/50 uppercase tracking-widest text-[10px]">Documentation</div>
+<a class="flex items-center gap-sm text-on-surface-variant px-md py-sm hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                    Overview
+                </a>
+<a class="flex items-center gap-sm bg-primary-container/10 text-primary border-l-2 border-primary px-md py-sm translate-x-1 transition-transform" href="#">
+<span class="material-symbols-outlined">account_tree</span>
+                    Architecture
+                </a>
+<a class="flex items-center gap-sm text-on-surface-variant px-md py-sm hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">folder_open</span>
+                    File Tree
+                </a>
+<a class="flex items-center gap-sm text-on-surface-variant px-md py-sm hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">account_tree</span>
+                    Dependencies
+                </a>
+<div class="px-md mt-lg mb-2 text-on-surface-variant/50 uppercase tracking-widest text-[10px]">Reference</div>
+<a class="flex items-center gap-sm text-on-surface-variant px-md py-sm hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">link</span>
+                    Import Graph
+                </a>
+<a class="flex items-center gap-sm text-on-surface-variant px-md py-sm hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">data_object</span>
+                    Class Reference
+                </a>
+<a class="flex items-center gap-sm text-on-surface-variant px-md py-sm hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">functions</span>
+                    Function Catalog
+                </a>
+</nav>
+<div class="mt-auto border-t border-outline-variant pt-md">
+<a class="flex items-center gap-sm text-on-surface-variant px-md py-sm hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+                    Settings
+                </a>
+<a class="flex items-center gap-sm text-on-surface-variant px-md py-sm hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+                    Support
+                </a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 md:ml-[280px] p-md md:p-lg lg:px-xl max-w-container-max mx-auto w-full">
+<div class="mb-lg">
+<div class="text-on-surface-variant font-code-sm mb-2 flex items-center gap-2">
+<span>docs</span> <span class="material-symbols-outlined text-[14px]">chevron_right</span> <span>architecture</span> <span class="material-symbols-outlined text-[14px]">chevron_right</span> <span class="text-primary">DEVELOPER.md</span>
+</div>
+<h1 class="font-display text-display text-on-surface mb-4">System Architecture &amp; Reference</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-3xl">
+                    Detailed breakdown of the Project Alpha core engine. This document is auto-generated from static analysis of the source code.
+                </p>
+</div>
+<!-- Architecture Section -->
+<section class="mb-xl">
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-md flex items-center gap-2 border-b border-outline-variant pb-2">
+<span class="material-symbols-outlined text-primary">account_tree</span> System Architecture
+                </h2>
+<div class="bg-surface-container-low border border-outline-variant rounded-lg p-lg mb-4 relative group">
+<div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="bg-surface border border-outline-variant text-on-surface-variant p-1.5 rounded hover:text-primary hover:border-primary transition-colors" title="Copy Mermaid Code">
+<span class="material-symbols-outlined text-sm">content_copy</span>
+</button>
+</div>
+<!-- Simulated Mermaid Render -->
+<div class="w-full overflow-x-auto py-8 flex justify-center items-center min-h-[300px] bg-[#0d152a] rounded border border-[#1e293b]">
+<div class="flex flex-col items-center gap-8">
+<div class="flex gap-16">
+<div class="bg-surface border border-primary px-6 py-3 rounded text-primary font-code-md shadow-[0_0_15px_rgba(78,222,163,0.1)]">Frontend (React)</div>
+<div class="bg-surface border border-secondary px-6 py-3 rounded text-secondary font-code-md">API Gateway</div>
+</div>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-outline">arrow_downward</span>
+<span class="material-symbols-outlined text-outline">arrow_downward</span>
+</div>
+<div class="flex gap-8">
+<div class="bg-surface-container-high border border-outline-variant px-6 py-3 rounded text-on-surface font-code-md">Auth Service</div>
+<div class="bg-surface-container-high border border-outline-variant px-6 py-3 rounded text-on-surface font-code-md">Core Engine</div>
+<div class="bg-surface-container-high border border-outline-variant px-6 py-3 rounded text-on-surface font-code-md">Data Sync</div>
+</div>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-outline">arrow_downward</span>
+</div>
+<div class="bg-surface-container-lowest border border-outline px-12 py-4 rounded-xl text-on-surface-variant font-code-md flex items-center gap-2">
+<span class="material-symbols-outlined">database</span>
+                                 PostgreSQL Database
+                             </div>
+</div>
+</div>
+<div class="mt-4 text-on-surface-variant font-code-sm text-sm">Graph TD representation of primary service boundaries.</div>
+</div>
+</section>
+<!-- File Reference Section -->
+<section>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-md flex items-center gap-2 border-b border-outline-variant pb-2">
+<span class="material-symbols-outlined text-primary">data_object</span> File Reference
+                </h2>
+<div class="space-y-xl">
+<!-- Class Table -->
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4">Core Classes</h3>
+<div class="overflow-x-auto border border-outline-variant rounded-lg bg-surface-container-low">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-highest border-b border-outline-variant">
+<th class="p-sm px-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Class Signature</th>
+<th class="p-sm px-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Docstring / Description</th>
+<th class="p-sm px-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider w-24 text-right">Line</th>
+</tr>
+</thead>
+<tbody class="font-code-md text-code-md">
+<tr class="border-b border-outline-variant/50 hover:bg-surface-container-high transition-colors">
+<td class="p-sm px-4 text-primary">class EngineCore(BaseService)</td>
+<td class="p-sm px-4 text-on-surface font-body-md text-sm">Main orchestrator for static analysis pipelines. Handles queue management.</td>
+<td class="p-sm px-4 text-on-surface-variant text-right">42</td>
+</tr>
+<tr class="border-b border-outline-variant/50 hover:bg-surface-container-high transition-colors">
+<td class="p-sm px-4 text-primary">class ParserConfig(ConfigModel)</td>
+<td class="p-sm px-4 text-on-surface font-body-md text-sm">Validates and normalizes AST parsing rules based on language type.</td>
+<td class="p-sm px-4 text-on-surface-variant text-right">128</td>
+</tr>
+<tr class="hover:bg-surface-container-high transition-colors">
+<td class="p-sm px-4 text-primary">class GraphBuilder(Renderer)</td>
+<td class="p-sm px-4 text-on-surface font-body-md text-sm">Constructs Mermaid.js definitions from dependency maps.</td>
+<td class="p-sm px-4 text-on-surface-variant text-right">256</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Function Table -->
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4">Utility Functions</h3>
+<div class="overflow-x-auto border border-outline-variant rounded-lg bg-surface-container-low">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-highest border-b border-outline-variant">
+<th class="p-sm px-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Function Signature</th>
+<th class="p-sm px-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Returns</th>
+<th class="p-sm px-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Docstring</th>
+<th class="p-sm px-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider w-24 text-right">Line</th>
+</tr>
+</thead>
+<tbody class="font-code-md text-code-md">
+<tr class="border-b border-outline-variant/50 hover:bg-surface-container-high transition-colors">
+<td class="p-sm px-4 text-secondary">def extract_imports(file_path: str)</td>
+<td class="p-sm px-4 text-tertiary">List[str]</td>
+<td class="p-sm px-4 text-on-surface font-body-md text-sm">Scans file for import statements using regex patterns.</td>
+<td class="p-sm px-4 text-on-surface-variant text-right">14</td>
+</tr>
+<tr class="border-b border-outline-variant/50 hover:bg-surface-container-high transition-colors">
+<td class="p-sm px-4 text-secondary">def generate_hash(content: bytes)</td>
+<td class="p-sm px-4 text-tertiary">str</td>
+<td class="p-sm px-4 text-on-surface font-body-md text-sm">Creates SHA-256 hash for caching unchanged files.</td>
+<td class="p-sm px-4 text-on-surface-variant text-right">55</td>
+</tr>
+<tr class="hover:bg-surface-container-high transition-colors">
+<td class="p-sm px-4 text-secondary">async def fetch_repo(url: str, token: str)</td>
+<td class="p-sm px-4 text-tertiary">RepoObject</td>
+<td class="p-sm px-4 text-on-surface font-body-md text-sm">Clones repository into temporary volume for analysis.</td>
+<td class="p-sm px-4 text-on-surface-variant text-right">89</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</section>
+</main>
+</div>
+<!-- Footer -->
+<footer class="w-full py-xl px-lg mt-auto flex flex-col md:flex-row justify-between items-center gap-md bg-surface-container-lowest border-t border-outline-variant font-code-sm text-code-sm text-primary md:ml-[280px] md:w-[calc(100%-280px)] z-50">
+<div class="font-headline-sm text-headline-sm text-on-surface">CodeAtlas</div>
+<div class="text-on-surface-variant text-center md:text-left">
+            © 2024 CodeAtlas. Precision static analysis.
+        </div>
+<nav class="flex gap-md">
+<a class="text-on-surface-variant hover:text-secondary transition-colors" href="#">Documentation</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors" href="#">Changelog</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors" href="#">Security</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors" href="#">GitHub</a>
+</nav>
+</footer>
+</body></html>

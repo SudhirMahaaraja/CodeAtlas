@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CodeAtlas - Documentation Viewer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"on-primary-container": "#003f2b", "on-secondary": "#063827", "on-surface": "#dde4de", "tertiary-fixed-dim": "#ffb3af", "on-primary": "#003826", "on-tertiary-fixed-variant": "#812627", "inverse-surface": "#dde4de", "error-container": "#93000a", "surface-container-low": "#171d19", "on-secondary-fixed-variant": "#224f3c", "outline-variant": "#3d4a43", "on-tertiary-fixed": "#410005", "on-background": "#dde4de", background: "#0e1511", "primary-fixed": "#79fac4", "surface-container-highest": "#303632", "surface-tint": "#5addaa", "on-primary-fixed-variant": "#005139", "on-error-container": "#ffdad6", "inverse-on-surface": "#2b322e", secondary: "#a1d1b8", "surface-dim": "#0e1511", "on-tertiary": "#620e13", surface: "#0e1511", outline: "#86948b", tertiary: "#ffb3af", "on-primary-fixed": "#002115", "surface-container-lowest": "#09100c", "on-error": "#690005", "secondary-fixed": "#bcedd4", "tertiary-container": "#f37c78", "primary-fixed-dim": "#5addaa", "on-tertiary-container": "#6b1519", error: "#ffb4ab", "secondary-fixed-dim": "#a1d1b8", "on-secondary-container": "#90bfa7", "surface-container-high": "#252b28", "tertiary-fixed": "#ffdad7", "surface-variant": "#303632", primary: "#5addaa", "surface-bright": "#343b37", "surface-container": "#1a211d", "secondary-container": "#224f3c", "inverse-primary": "#006c4c", "on-surface-variant": "#bccac0", "on-secondary-fixed": "#002115", "primary-container": "#24b484"}, borderRadius: {DEFAULT: "0.5rem", lg: "1rem", xl: "1.5rem", full: "9999px"}, spacing: {base: "4px", "container-max": "1440px", lg: "24px", md: "16px", "sidebar-width": "280px", xs: "4px", xl: "40px", sm: "8px"}, fontFamily: {"code-md": ["JetBrains Mono"], "code-sm": ["JetBrains Mono"], "body-md": ["Inter"], "headline-lg": ["Inter"], "headline-md": ["Inter"], display: ["Plus Jakarta Sans"], "label-caps": ["JetBrains Mono"], "body-lg": ["Inter"], headline: ["Plus Jakarta Sans"], body: ["Plus Jakarta Sans"], label: ["Plus Jakarta Sans"]}, fontSize: {"code-md": ["14px", {lineHeight: "20px", fontWeight: "450"}], "code-sm": ["12px", {lineHeight: "16px", fontWeight: "450"}], "body-md": ["16px", {lineHeight: "24px", fontWeight: "400"}], "headline-lg": ["32px", {lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "600"}], "headline-md": ["24px", {lineHeight: "32px", fontWeight: "600"}], display: ["48px", {lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700"}], "label-caps": ["11px", {lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "600"}], "body-lg": ["18px", {lineHeight: "28px", fontWeight: "400"}]}}}};</script>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 flex items-center justify-between px-lg h-16 bg-surface/80 backdrop-blur-md border-b border-outline-variant dark:border-outline-variant">
+<div class="flex items-center gap-lg">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="code_blocks" style="font-variation-settings: 'FILL' 1;">code_blocks</span>
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary tracking-tight">CodeAtlas</span>
+</div>
+<nav class="hidden md:flex items-center gap-md">
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary transition-colors py-1" href="#">Features</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary transition-colors py-1" href="#">Pricing</a>
+<a class="text-primary dark:text-primary font-body-md text-body-md border-b-2 border-primary pb-1 hover:text-primary dark:hover:text-primary transition-colors" href="#">Docs</a>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<div class="hidden md:flex items-center bg-surface-container-high rounded-full px-sm py-xs border border-outline-variant focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px] ml-xs" data-icon="search">search</span>
+<input class="bg-transparent border-none text-body-md text-on-surface focus:ring-0 placeholder:text-on-surface-variant w-48 font-body-md" placeholder="Search docs..." type="text"/>
+<div class="flex items-center gap-xs text-on-surface-variant bg-surface px-2 py-0.5 rounded text-[10px] font-code-sm border border-outline-variant ml-sm">
+<span>⌘</span><span>K</span>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors p-sm rounded-full">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors p-sm rounded-full">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+<button class="hidden md:flex items-center justify-center bg-transparent border border-outline-variant text-on-surface hover:border-primary hover:text-primary transition-colors font-body-md text-body-md px-md py-xs rounded">
+                Sign In
+            </button>
+<button class="hidden md:flex items-center justify-center bg-primary text-[#000000] hover:opacity-90 transition-opacity font-body-md text-body-md px-md py-xs rounded font-medium">
+                New Analysis
+            </button>
+</div>
+</header>
+<div class="flex flex-1 pt-16 h-[calc(100vh-64px)] overflow-hidden">
+<!-- SideNavBar -->
+<aside class="hidden md:flex flex-col bg-surface-container-low dark:bg-surface-container-low border-r border-outline-variant dark:border-outline-variant w-sidebar-width h-full overflow-y-auto py-md z-40">
+<div class="px-md mb-lg">
+<div class="flex items-center gap-sm mb-xs">
+<div class="w-8 h-8 rounded bg-surface-container-highest flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="rocket_launch">rocket_launch</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-primary leading-tight">Project Alpha</h2>
+<p class="text-on-surface-variant font-code-sm text-code-sm">React/Node.js Analysis</p>
+</div>
+</div>
+<button class="w-full mt-md flex items-center justify-center gap-sm bg-surface border border-outline-variant text-on-surface hover:border-primary hover:text-primary transition-colors font-body-md text-body-md px-md py-xs rounded">
+<span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+                    Export PDF
+                </button>
+</div>
+<div class="px-sm mb-xs">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant px-sm mb-xs">NAVIGATION</h3>
+</div>
+<nav class="flex-1 flex flex-col gap-1 px-sm">
+<a class="flex items-center gap-sm bg-primary-container/10 text-primary border-l-2 border-primary px-md py-sm font-label-caps text-label-caps opacity-80 transition-all" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="dashboard">dashboard</span>
+                    Overview
+                </a>
+<a class="flex items-center gap-sm text-on-surface-variant px-md py-sm hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors font-label-caps text-label-caps border-l-2 border-transparent" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="account_tree">account_tree</span>
+                    Architecture
+                </a>
+<a class="flex items-center gap-sm text-on-surface-variant px-md py-sm hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors font-label-caps text-label-caps border-l-2 border-transparent" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="folder_open">folder_open</span>
+                    File Tree
+                </a>
+<a class="flex items-center gap-sm text-on-surface-variant px-md py-sm hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors font-label-caps text-label-caps border-l-2 border-transparent" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="account_tree">account_tree</span>
+                    Dependencies
+                </a>
+</nav>
+<div class="mt-auto px-sm pt-md border-t border-outline-variant">
+<a class="flex items-center gap-sm text-on-surface-variant px-md py-sm hover:bg-surface-container-high transition-colors font-label-caps text-label-caps rounded" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="settings">settings</span>
+                    Settings
+                </a>
+<a class="flex items-center gap-sm text-on-surface-variant px-md py-sm hover:bg-surface-container-high transition-colors font-label-caps text-label-caps rounded" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="help_outline">help_outline</span>
+                    Support
+                </a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto bg-background p-md md:p-lg lg:p-xl">
+<div class="max-w-4xl mx-auto space-y-xl">
+<!-- Document Header -->
+<header class="border-b border-outline-variant pb-md">
+<div class="flex items-center gap-sm text-on-surface-variant font-code-sm text-code-sm mb-md">
+<span>docs</span>
+<span class="material-symbols-outlined text-[14px]" data-icon="chevron_right">chevron_right</span>
+<span>core</span>
+<span class="material-symbols-outlined text-[14px]" data-icon="chevron_right">chevron_right</span>
+<span class="text-primary">README.md</span>
+</div>
+<h1 class="font-display text-display text-on-surface mb-sm">CodeAtlas Core Engine</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">The high-performance static analysis engine for multi-language codebases.</p>
+</header>
+<!-- Section: Installation -->
+<section class="space-y-md">
+<h2 class="font-headline-lg text-headline-lg text-on-surface flex items-center gap-sm border-b border-outline-variant/50 pb-sm">
+<span class="material-symbols-outlined text-secondary" data-icon="terminal">terminal</span>
+                        Installation
+                    </h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Install the core engine via pip. Python 3.9+ is required.</p>
+<div class="relative bg-surface-container rounded-lg border border-outline-variant overflow-hidden">
+<div class="flex items-center justify-between px-md py-sm border-b border-outline-variant bg-surface-container-highest">
+<span class="font-code-sm text-code-sm text-on-surface-variant">bash</span>
+<button class="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]" data-icon="content_copy">content_copy</span>
+<span class="font-code-sm text-code-sm">Copy</span>
+</button>
+</div>
+<pre class="p-md font-code-md text-code-md text-on-surface overflow-x-auto"><code><span class="text-secondary">pip</span> install codeatlas-core
+<span class="text-outline"># Or for development:</span>
+<span class="text-secondary">pip</span> install -e .[dev]</code></pre>
+</div>
+</section>
+<!-- Section: Project Structure -->
+<section class="space-y-md">
+<h2 class="font-headline-lg text-headline-lg text-on-surface flex items-center gap-sm border-b border-outline-variant/50 pb-sm">
+<span class="material-symbols-outlined text-tertiary" data-icon="account_tree">account_tree</span>
+                        Project Structure
+                    </h2>
+<div class="bg-surface-container-low p-md rounded-lg border border-outline-variant font-code-md text-code-md text-on-surface-variant">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-sm"><span class="material-symbols-outlined text-[18px] text-primary" data-icon="folder">folder</span> <span class="text-on-surface">codeatlas/</span></div>
+<div class="flex items-center gap-sm ml-lg"><span class="material-symbols-outlined text-[18px] text-outline" data-icon="folder">folder</span> <span>analyzers/</span></div>
+<div class="flex items-center gap-sm ml-xl"><span class="material-symbols-outlined text-[18px] text-secondary" data-icon="description">description</span> <span>python.py</span></div>
+<div class="flex items-center gap-sm ml-xl"><span class="material-symbols-outlined text-[18px] text-secondary" data-icon="description">description</span> <span>javascript.py</span></div>
+<div class="flex items-center gap-sm ml-lg"><span class="material-symbols-outlined text-[18px] text-outline" data-icon="folder">folder</span> <span>models/</span></div>
+<div class="flex items-center gap-sm ml-xl"><span class="material-symbols-outlined text-[18px] text-secondary" data-icon="description">description</span> <span>ast_node.py</span></div>
+<div class="flex items-center gap-sm ml-lg"><span class="material-symbols-outlined text-[18px] text-secondary" data-icon="description">description</span> <span>main.py</span></div>
+</div>
+</div>
+</section>
+<!-- Section: Dependencies -->
+<section class="space-y-md">
+<h2 class="font-headline-lg text-headline-lg text-on-surface flex items-center gap-sm border-b border-outline-variant/50 pb-sm">
+<span class="material-symbols-outlined text-error" data-icon="extension">extension</span>
+                        Dependencies
+                    </h2>
+<div class="border border-outline-variant rounded-lg overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high border-b border-outline-variant font-label-caps text-label-caps text-on-surface-variant">
+<th class="p-md font-semibold">Package</th>
+<th class="p-md font-semibold">Version</th>
+<th class="p-md font-semibold">Purpose</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface">
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
+<td class="p-md font-code-md text-primary">FastAPI</td>
+<td class="p-md font-code-md text-on-surface-variant">&gt;=0.100.0</td>
+<td class="p-md">High-performance API routing and validation.</td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
+<td class="p-md font-code-md text-primary">Pydantic</td>
+<td class="p-md font-code-md text-on-surface-variant">&gt;=2.0.0</td>
+<td class="p-md">Data validation and settings management.</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="p-md font-code-md text-primary">Jinja2</td>
+<td class="p-md font-code-md text-on-surface-variant">&gt;=3.1.0</td>
+<td class="p-md">Templating for report generation.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<div class="flex items-center justify-between pt-xl pb-lg border-t border-outline-variant mt-xl">
+<button class="flex items-center gap-sm text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+                        Previous: Introduction
+                    </button>
+<button class="flex items-center gap-sm text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md">
+                        Next: Configuration
+                        <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Footer -->
+<footer class="w-full py-xl px-lg mt-auto flex flex-col md:flex-row justify-between items-center gap-md bg-surface-container-lowest dark:bg-surface-container-lowest border-t border-outline-variant dark:border-outline-variant max-w-4xl mx-auto">
+<div class="flex items-center gap-sm">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold tracking-tight">CodeAtlas</span>
+<span class="text-on-surface-variant font-code-sm text-code-sm">© 2024 CodeAtlas. Precision static analysis.</span>
+</div>
+<nav class="flex gap-md font-code-sm text-code-sm">
+<a class="text-primary underline hover:text-secondary dark:hover:text-secondary opacity-70 transition-colors" href="#">Documentation</a>
+<a class="text-on-surface-variant hover:text-secondary dark:hover:text-secondary transition-colors" href="#">Changelog</a>
+<a class="text-on-surface-variant hover:text-secondary dark:hover:text-secondary transition-colors" href="#">Security</a>
+<a class="text-on-surface-variant hover:text-secondary dark:hover:text-secondary transition-colors" href="#">GitHub</a>
+</nav>
+</footer>
+</main>
+</div>
+</body></html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CodeAtlas - Turn Code into Clarity</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"on-primary-container": "#003f2b", "on-secondary": "#063827", "on-surface": "#dde4de", "tertiary-fixed-dim": "#ffb3af", "on-primary": "#003826", "on-tertiary-fixed-variant": "#812627", "inverse-surface": "#dde4de", "error-container": "#93000a", "surface-container-low": "#171d19", "on-secondary-fixed-variant": "#224f3c", "outline-variant": "#3d4a43", "on-tertiary-fixed": "#410005", "on-background": "#dde4de", background: "#0e1511", "primary-fixed": "#79fac4", "surface-container-highest": "#303632", "surface-tint": "#5addaa", "on-primary-fixed-variant": "#005139", "on-error-container": "#ffdad6", "inverse-on-surface": "#2b322e", secondary: "#a1d1b8", "surface-dim": "#0e1511", "on-tertiary": "#620e13", surface: "#0e1511", outline: "#86948b", tertiary: "#ffb3af", "on-primary-fixed": "#002115", "surface-container-lowest": "#09100c", "on-error": "#690005", "secondary-fixed": "#bcedd4", "tertiary-container": "#f37c78", "primary-fixed-dim": "#5addaa", "on-tertiary-container": "#6b1519", error: "#ffb4ab", "secondary-fixed-dim": "#a1d1b8", "on-secondary-container": "#90bfa7", "surface-container-high": "#252b28", "tertiary-fixed": "#ffdad7", "surface-variant": "#303632", primary: "#5addaa", "surface-bright": "#343b37", "surface-container": "#1a211d", "secondary-container": "#224f3c", "inverse-primary": "#006c4c", "on-surface-variant": "#bccac0", "on-secondary-fixed": "#002115", "primary-container": "#24b484"}, borderRadius: {DEFAULT: "0.5rem", lg: "1rem", xl: "1.5rem", full: "9999px"}, spacing: {base: "4px", "container-max": "1440px", lg: "24px", md: "16px", "sidebar-width": "280px", xs: "4px", xl: "40px", sm: "8px"}, fontFamily: {"code-md": ["JetBrains Mono"], "code-sm": ["JetBrains Mono"], "body-md": ["Inter"], "headline-lg": ["Inter"], "headline-md": ["Inter"], display: ["Plus Jakarta Sans"], "label-caps": ["JetBrains Mono"], "body-lg": ["Inter"], headline: ["Plus Jakarta Sans"], body: ["Plus Jakarta Sans"], label: ["Plus Jakarta Sans"]}, fontSize: {"code-md": ["14px", {lineHeight: "20px", fontWeight: "450"}], "code-sm": ["12px", {lineHeight: "16px", fontWeight: "450"}], "body-md": ["16px", {lineHeight: "24px", fontWeight: "400"}], "headline-lg": ["32px", {lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "600"}], "headline-md": ["24px", {lineHeight: "32px", fontWeight: "600"}], display: ["48px", {lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700"}], "label-caps": ["11px", {lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "600"}], "body-lg": ["18px", {lineHeight: "28px", fontWeight: "400"}]}}}};</script>
+<style>
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .code-bg {
+            background: linear-gradient(145deg, #060e20 0%, #0b1326 100%);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md overflow-x-hidden">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 flex items-center justify-between px-lg h-16 bg-surface/80 backdrop-blur-md border-b border-outline-variant dark:border-outline-variant transition-all">
+<div class="flex items-center gap-lg">
+<div class="font-headline-md text-headline-md font-bold text-primary dark:text-primary">CodeAtlas</div>
+<nav class="hidden md:flex gap-md">
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary transition-colors font-body-md text-body-md" href="#">Features</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary transition-colors font-body-md text-body-md" href="#">Pricing</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary transition-colors font-body-md text-body-md" href="#">Docs</a>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<button class="text-on-surface-variant hover:text-primary transition-colors hidden md:block font-body-md text-body-md">Sign In</button>
+<button class="bg-primary text-on-primary-container px-4 py-2 rounded font-body-md text-body-md hover:opacity-90 transition-opacity">New Analysis</button>
+<div class="flex gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined hover:text-primary cursor-pointer transition-colors" data-icon="account_circle">account_circle</span>
+<span class="material-symbols-outlined hover:text-primary cursor-pointer transition-colors" data-icon="settings">settings</span>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow pt-[104px] pb-xl px-md md:px-lg max-w-container-max mx-auto w-full flex flex-col gap-[80px]">
+<!-- Hero Section -->
+<section class="flex flex-col items-center text-center max-w-[800px] mx-auto mt-xl relative">
+<h1 class="font-display text-display mb-lg bg-clip-text text-transparent bg-gradient-to-r from-on-surface to-on-surface-variant">
+                Turn Code into Clarity. <span class="text-primary">Instantly.</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-[48px] max-w-[600px]">
+                Analyze your Python and JS codebases with zero LLM calls. Generate production-ready README and DEVELOPER.md docs in seconds using pure static analysis.
+            </p>
+<!-- CTA Area -->
+<div class="w-full max-w-[600px] flex flex-col gap-lg glass-panel p-lg rounded-xl">
+<!-- Upload Dropzone -->
+<div class="border-2 border-dashed border-outline-variant rounded-lg p-xl flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors bg-surface-container-lowest/50 group">
+<span class="material-symbols-outlined text-[48px] text-on-surface-variant group-hover:text-primary mb-md transition-colors" data-icon="upload_file">upload_file</span>
+<span class="font-headline-md text-headline-md text-on-surface mb-xs">Upload ZIP</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Drag &amp; drop your repository here</span>
+</div>
+<div class="flex items-center gap-md">
+<div class="h-px bg-outline-variant flex-grow"></div>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">or</span>
+<div class="h-px bg-outline-variant flex-grow"></div>
+</div>
+<!-- GitHub Input -->
+<div class="flex flex-col gap-sm">
+<label class="font-label-caps text-label-caps text-on-surface-variant text-left pl-xs">Paste GitHub URL</label>
+<div class="flex gap-sm">
+<input class="flex-grow bg-surface-container-lowest border border-outline-variant rounded p-3 text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/50 font-code-md text-code-md transition-all" placeholder="https://github.com/user/repo" type="text"/>
+<button class="bg-surface-variant text-on-surface border border-outline-variant px-lg rounded font-body-md text-body-md hover:border-primary hover:text-primary transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined text-[20px]" data-icon="search">search</span>
+                            Analyze
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Preview & Features Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-md md:gap-lg">
+<!-- Visual Preview (Span 2 cols) -->
+<div class="md:col-span-2 glass-panel rounded-xl overflow-hidden flex flex-col border border-outline-variant h-[500px]">
+<div class="bg-surface-container flex items-center px-md py-sm border-b border-outline-variant gap-sm">
+<div class="flex gap-2">
+<div class="w-3 h-3 rounded-full bg-error-container"></div>
+<div class="w-3 h-3 rounded-full bg-tertiary-container"></div>
+<div class="w-3 h-3 rounded-full bg-primary-container"></div>
+</div>
+<span class="font-code-sm text-code-sm text-on-surface-variant ml-md">DEVELOPER.md</span>
+</div>
+<div class="p-lg overflow-y-auto flex-grow code-bg flex flex-col gap-md">
+<h2 class="font-headline-lg text-headline-lg text-on-surface border-b border-outline-variant pb-xs">Architecture Overview</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Auto-generated structural mapping for project-alpha.</p>
+<div class="bg-surface-container-lowest p-md rounded border border-outline-variant font-code-sm text-code-sm text-secondary font-mono whitespace-pre overflow-x-auto">
+graph TD
+    A[app.py] --&gt; B(router/api.py)
+    B --&gt; C{services/auth.py}
+    C --&gt;|validate| D[models/user.py]
+    A --&gt; E[config/settings.py]
+                    </div>
+<h3 class="font-headline-md text-headline-md text-on-surface mt-sm">Key Dependencies</h3>
+<ul class="list-disc pl-lg font-body-md text-body-md text-on-surface-variant">
+<li>FastAPI (Web Framework)</li>
+<li>SQLAlchemy (ORM)</li>
+<li>Pydantic (Validation)</li>
+</ul>
+</div>
+</div>
+<!-- Features Column -->
+<div class="flex flex-col gap-md md:gap-lg">
+<!-- Feature 1 -->
+<div class="bg-surface-container-low border border-outline-variant rounded-xl p-lg hover:border-primary transition-colors group flex-grow flex flex-col justify-center relative overflow-hidden">
+<div class="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rounded-full blur-xl group-hover:bg-primary/10 transition-colors"></div>
+<span class="material-symbols-outlined text-[32px] text-primary mb-md" data-icon="security">security</span>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-sm">Pure Static Analysis</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">No AI fees or privacy concerns. Your code stays local or is processed in memory momentarily.</p>
+</div>
+<!-- Feature 2 -->
+<div class="bg-surface-container-low border border-outline-variant rounded-xl p-lg hover:border-secondary transition-colors group flex-grow flex flex-col justify-center relative overflow-hidden">
+<div class="absolute -right-4 -top-4 w-24 h-24 bg-secondary/5 rounded-full blur-xl group-hover:bg-secondary/10 transition-colors"></div>
+<span class="material-symbols-outlined text-[32px] text-secondary mb-md" data-icon="account_tree">account_tree</span>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-sm">Automatic Diagrams</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Mermaid.js architecture graphs instantly generated from your import trees.</p>
+</div>
+<!-- Feature 3 -->
+<div class="bg-surface-container-low border border-outline-variant rounded-xl p-lg hover:border-tertiary transition-colors group flex-grow flex flex-col justify-center relative overflow-hidden">
+<div class="absolute -right-4 -top-4 w-24 h-24 bg-tertiary/5 rounded-full blur-xl group-hover:bg-tertiary/10 transition-colors"></div>
+<span class="material-symbols-outlined text-[32px] text-tertiary mb-md" data-icon="psychology">psychology</span>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-sm">Framework Aware</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Deep structural detection for FastAPI, Flask, React, Node.js, and more.</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-xl px-lg mt-auto flex flex-col md:flex-row justify-between items-center gap-md bg-surface-container-lowest dark:bg-surface-container-lowest border-t border-outline-variant dark:border-outline-variant">
+<div class="font-headline-sm text-headline-sm text-on-surface font-semibold text-lg">CodeAtlas</div>
+<div class="font-code-sm text-code-sm text-on-surface-variant text-center md:text-left">
+            © 2024 CodeAtlas. Precision static analysis.
+        </div>
+<nav class="flex gap-md font-code-sm text-code-sm">
+<a class="text-on-surface-variant hover:text-secondary dark:hover:text-secondary transition-colors" href="#">Documentation</a>
+<a class="text-on-surface-variant hover:text-secondary dark:hover:text-secondary transition-colors" href="#">Changelog</a>
+<a class="text-on-surface-variant hover:text-secondary dark:hover:text-secondary transition-colors" href="#">Security</a>
+<a class="text-on-surface-variant hover:text-secondary dark:hover:text-secondary transition-colors" href="#">GitHub</a>
+</nav>
+</footer>
+</body></html>
