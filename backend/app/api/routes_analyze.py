@@ -52,7 +52,7 @@ def run_analysis_task(job_id: str, workspace_path: str, source_type: str, source
         
         # Generate docs
         readme_md = ReadmeGenerator.generate(project_model, workspace_path)
-        devdoc_md = DevdocGenerator.generate(project_model)
+        devdoc_md = DevdocGenerator.generate(project_model, workspace_path)
         
         # Save to database
         jobs_col.update_one(

@@ -1,79 +1,99 @@
-import os
-from jinja2 import Template
-from backend.app.models.schema import ProjectModel
+"""
+devdoc_generator.py
+====================
+Renders devdoc_template.md.j2 from a ProjectModel.
 
-DEVDOC_TEMPLATE = """# Architecture & Developer Documentation
-
-## 🏗️ System Architecture & Import Graph
-This diagram shows the relationship and import dependencies between modules in the codebase.
-
-```mermaid
-graph TD
-{% if project.import_graph and project.import_graph.items()|length > 0 %}
-  {% for source, targets in project.import_graph.items() %}
-    {% for target in targets %}
-  {{ source | replace("/", "_") | replace(".", "_") | replace("-", "_") }}["{{ source }}"] --> {{ target | replace("/", "_") | replace(".", "_") | replace("-", "_") }}["{{ target }}"]
-    {% endfor %}
-  {% endfor %}
-{% else %}
-  No cross-file import relationships detected.
-{% endif %}
-```
-
----
-
-## 📁 File Reference Catalog
-
-{% for file in project.files %}
-### 📄 `{{ file.path }}`
-- **Language:** {{ file.language }}
-- **Lines of Code:** {{ file.loc }}
-{% if file.module_docstring %}
-- **Details:** {{ file.module_docstring }}
-{% endif %}
-
-{% if file.classes %}
-#### Classes
-| Class Name | Line | Inherits From | Description |
-|---|---|---|---|
-{% for cls in file.classes %}
-| `{{ cls.name }}` | {{ cls.line_number }} | {{ cls.base_classes | join(", ") }} | {{ cls.docstring or "No description." }} |
-{% endfor %}
-
-{% for cls in file.classes %}
-{% if cls.methods %}
-##### Methods inside `{{ cls.name }}`
-| Method Name | Line | Async | Arguments | Return Type |
-|---|---|---|---|---|
-{% for method in cls.methods %}
-| `{{ method.name }}` | {{ method.line_number }} | {{ method.is_async }} | {% for param in method.params %}`{{ param.name }}`{% if param.type_hint %}: {{ param.type_hint }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %} | `{{ method.return_type or 'Any' }}` |
-{% endfor %}
-{% endif %}
-{% endfor %}
-{% endif %}
-
-{% if file.functions %}
-#### Functions
-| Function Name | Line | Async | Arguments | Return Type | Description |
-|---|---|---|---|---|---|
-{% for func in file.functions %}
-| `{{ func.name }}` | {{ func.line_number }} | {{ func.is_async }} | {% for param in func.params %}`{{ param.name }}`{% if param.type_hint %}: {{ param.type_hint }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %} | `{{ func.return_type or 'Any' }}` | {{ func.docstring or "No description." }} |
-{% endfor %}
-{% endif %}
-
----
-{% endfor %}
-
----
-*DEVELOPER.md generated automatically by [CodeAtlas](https://github.com/your-repo/codeatlas) with zero LLM calls.*
+Usage
+-----
+    gen = DevdocGenerator(templates_dir="path/to/templates")
+    markdown = gen.render(project_model)
 """
 
+from __future__ import annotations
+
+import os
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Optional
+
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+from backend.app.models.schema import ProjectModel, FileModel
+
+
+@dataclass
+class DevdocContext:
+    """All variables the DEVELOPER template may reference."""
+
+    project: ProjectModel
+    total_loc: int = 0
+    total_classes: int = 0
+    total_functions: int = 0
+
+
 class DevdocGenerator:
-    @staticmethod
-    def generate(project: ProjectModel) -> str:
+    """
+    Builds a DevdocContext from a ProjectModel and renders the Jinja2 template.
+
+    Parameters
+    ----------
+    templates_dir : str | Path
+        Directory containing ``devdoc_template.md.j2``.
+    """
+
+    def __init__(self, templates_dir: str | Path = "templates"):
+        self._env = Environment(
+            loader=FileSystemLoader(str(templates_dir)),
+            autoescape=select_autoescape(disabled_extensions=("md.j2",)),
+            trim_blocks=True,
+            lstrip_blocks=True,
+        )
+
+    # ── Compatibility entry point ─────────────────────────────────────────────
+
+    @classmethod
+    def generate(cls, project: ProjectModel, workspace_path: str = ".") -> str:
         """
-        Generates DEVELOPER.md content string from ProjectModel.
+        Class method matching the original interface. Dynamically resolves templates dir.
         """
-        template = Template(DEVDOC_TEMPLATE)
-        # Helper filter to replace chars for safe Mermaid IDs
-        return template.render(project=project)
+        current_dir = Path(__file__).parent.parent
+        templates_dir = current_dir / "templates"
+        gen = cls(templates_dir=templates_dir)
+        return gen.render(project)
+
+    # ── Public entry point ────────────────────────────────────────────────────
+
+    def render(self, project: ProjectModel) -> str:
+        """
+        Render the DEVELOPER template and return the markdown string.
+
+        Parameters
+        ----------
+        project : ProjectModel
+            The parsed structural model.
+
+        Returns
+        -------
+        str
+            Fully rendered DEVELOPER.md content.
+        """
+        ctx = self.build_context(project)
+        template = self._env.get_template("devdoc_template.md.j2")
+        return template.render(**ctx.__dict__)
+
+    # ── Context builder ───────────────────────────────────────────────────────
+
+    def build_context(self, project: ProjectModel) -> DevdocContext:
+        """
+        Walk the ProjectModel to populate a DevdocContext.
+        """
+        ctx = DevdocContext(project=project)
+
+        ctx.total_loc = sum(f.loc for f in project.files)
+        
+        # Calculate counts
+        for file in project.files:
+            ctx.total_classes += len(file.classes)
+            ctx.total_functions += len(file.functions)
+
+        return ctx
