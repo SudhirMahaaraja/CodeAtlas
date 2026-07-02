@@ -15,7 +15,11 @@ import {
   RefreshCw,
   FolderOpen,
   Hash,
-  Database
+  Database,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Menu
 } from 'lucide-react';
 import { marked } from 'marked';
 import { SlotText } from 'slot-text/react';
@@ -58,6 +62,50 @@ function App() {
   
   const fileInputRef = useRef(null);
 
+  // Sidebar sizing & collapse states
+  const [leftSidebarWidth, setLeftSidebarWidth] = useState(280);
+  const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
+  const [rightSidebarWidth, setRightSidebarWidth] = useState(320);
+  const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
+
+  const startResizeLeft = (e) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = leftSidebarWidth;
+
+    const doDrag = (dragEvent) => {
+      const newWidth = Math.max(200, Math.min(450, startWidth + (dragEvent.clientX - startX)));
+      setLeftSidebarWidth(newWidth);
+    };
+
+    const stopDrag = () => {
+      document.removeEventListener('mousemove', doDrag);
+      document.removeEventListener('mouseup', stopDrag);
+    };
+
+    document.addEventListener('mousemove', doDrag);
+    document.addEventListener('mouseup', stopDrag);
+  };
+
+  const startResizeRight = (e) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = rightSidebarWidth;
+
+    const doDrag = (dragEvent) => {
+      const newWidth = Math.max(240, Math.min(480, startWidth - (dragEvent.clientX - startX)));
+      setRightSidebarWidth(newWidth);
+    };
+
+    const stopDrag = () => {
+      document.removeEventListener('mousemove', doDrag);
+      document.removeEventListener('mouseup', stopDrag);
+    };
+
+    document.addEventListener('mousemove', doDrag);
+    document.addEventListener('mouseup', stopDrag);
+  };
+
   // Initialize theme and load recents
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -99,6 +147,21 @@ function App() {
     const updated = [job, ...recentJobs.filter(j => j.id !== job.id)].slice(0, 10);
     setRecentJobs(updated);
     localStorage.setItem('codeatlas_recent_jobs', JSON.stringify(updated));
+  };
+
+  // Remove a job from recents
+  const removeRecentJob = (id, e) => {
+    e.stopPropagation();
+    const updated = recentJobs.filter(j => j.id !== id);
+    setRecentJobs(updated);
+    localStorage.setItem('codeatlas_recent_jobs', JSON.stringify(updated));
+    if (jobId === id) {
+      setJobId(null);
+      setJobStatus(null);
+      setJobDetails(null);
+      setReadmeContent('');
+      setDevdocContent('');
+    }
   };
 
   const toggleTheme = () => {
@@ -247,109 +310,168 @@ function App() {
   return (
     <div className="workbench-layout">
       {/* Sidebar Panel */}
-      <div className="sidebar" style={{ display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '24px', borderBottom: '1px solid var(--outline-variant)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Layers style={{ color: 'var(--primary)', width: '24px', height: '24px' }} />
-              <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--on-surface)' }}><SlotText text="CodeAtlas" /></h2>
-            </div>
-            <button 
-              className="secondary" 
-              onClick={toggleTheme} 
-              style={{ padding: '6px', borderRadius: 'var(--rounded-md)', display: 'inline-flex' }}
-            >
-              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-            </button>
-          </div>
-          <span className="label-caps" style={{ marginTop: '12px', display: 'block' }}>STATIC CODE ANALYSIS</span>
-        </div>
-
-        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', flex: 1, overflowY: 'auto' }}>
-          {/* GitHub Input */}
-          <form onSubmit={handleGithubSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <span className="label-caps">GitHub Repository</span>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <input 
-                type="text" 
-                placeholder="https://github.com/..." 
-                value={githubUrl}
-                onChange={(e) => setGithubUrl(e.target.value)}
-                disabled={loading || (jobStatus && jobStatus !== 'done' && jobStatus !== 'error')}
-                style={{ width: '100%' }}
-              />
-              <button 
-                type="submit" 
-                className="primary" 
-                disabled={loading || !githubUrl || (jobStatus && jobStatus !== 'done' && jobStatus !== 'error')}
-                style={{ justifyContent: 'center' }}
-              >
-                <GitBranch size={16} />
-                <SlotText text={loading ? "Analyzing..." : "Analyze Link"} />
-              </button>
-            </div>
-          </form>
-
-          {/* Divider */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--outline-variant)' }}></div>
-            <span className="label-caps" style={{ color: 'var(--outline)' }}>OR</span>
-            <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--outline-variant)' }}></div>
-          </div>
-
-          {/* ZIP Upload */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <span className="label-caps">Upload Code Archive</span>
-            <input 
-              type="file" 
-              accept=".zip" 
-              ref={fileInputRef}
-              onChange={handleZipUpload}
-              style={{ display: 'none' }}
-            />
-            <button 
-              className="secondary" 
-              onClick={() => fileInputRef.current?.click()}
-              disabled={loading || (jobStatus && jobStatus !== 'done' && jobStatus !== 'error')}
-              style={{ justifyContent: 'center', width: '100%', borderStyle: 'dashed' }}
-            >
-              <Upload size={16} />
-              <SlotText text={loading ? "Uploading..." : "Choose ZIP file"} />
-            </button>
-          </div>
-
-          {/* Recent Jobs */}
-          {recentJobs.length > 0 && (
-            <div style={{ marginTop: '16px' }}>
-              <span className="label-caps" style={{ display: 'block', marginBottom: '8px' }}>Recent Analyses</span>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {recentJobs.map((job) => (
-                  <div 
-                    key={job.id} 
-                    onClick={() => loadRecentJob(job)}
-                    style={{ 
-                      padding: '10px', 
-                      borderRadius: 'var(--rounded-default)', 
-                      backgroundColor: 'var(--surface-container-low)', 
-                      cursor: 'pointer',
-                      border: jobId === job.id ? '1px solid var(--primary)' : '1px solid transparent',
-                      transition: 'var(--transition-smooth)'
-                    }}
-                  >
-                    <div style={{ fontSize: '13px', fontWeight: '600', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                      {job.name}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--outline)' }}>
-                      {job.source_type === 'github' ? <GitBranch size={10} /> : <Upload size={10} />}
-                      <span>{new Date(job.created_at).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                ))}
+      {!leftSidebarCollapsed ? (
+        <div 
+          className="sidebar" 
+          style={{ 
+            width: `${leftSidebarWidth}px`, 
+            display: 'flex', 
+            flexDirection: 'column', 
+            flexShrink: 0 
+          }}
+        >
+          <div style={{ padding: '24px', borderBottom: '1px solid var(--outline-variant)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Layers style={{ color: 'var(--primary)', width: '24px', height: '24px' }} />
+                <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--on-surface)' }}><SlotText text="CodeAtlas" /></h2>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <button 
+                  className="secondary" 
+                  onClick={toggleTheme} 
+                  style={{ padding: '6px', borderRadius: 'var(--rounded-md)', display: 'inline-flex' }}
+                  title="Toggle theme"
+                >
+                  {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+                </button>
+                <button 
+                  className="secondary" 
+                  onClick={() => setLeftSidebarCollapsed(true)} 
+                  style={{ padding: '6px', borderRadius: 'var(--rounded-md)', display: 'inline-flex' }}
+                  title="Collapse sidebar"
+                >
+                  <ChevronLeft size={16} />
+                </button>
               </div>
             </div>
-          )}
+            <span className="label-caps" style={{ marginTop: '12px', display: 'block' }}>STATIC CODE ANALYSIS</span>
+          </div>
+
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', flex: 1, overflowY: 'auto' }}>
+            {/* GitHub Input */}
+            <form onSubmit={handleGithubSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <span className="label-caps">GitHub Repository</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <input 
+                  type="text" 
+                  placeholder="https://github.com/..." 
+                  value={githubUrl}
+                  onChange={(e) => setGithubUrl(e.target.value)}
+                  disabled={loading || (jobStatus && jobStatus !== 'done' && jobStatus !== 'error')}
+                  style={{ width: '100%' }}
+                />
+                <button 
+                  type="submit" 
+                  className="primary" 
+                  disabled={loading || !githubUrl || (jobStatus && jobStatus !== 'done' && jobStatus !== 'error')}
+                  style={{ justifyContent: 'center' }}
+                >
+                  <GitBranch size={16} />
+                  <SlotText text={loading ? "Analyzing..." : "Analyze Link"} />
+                </button>
+              </div>
+            </form>
+
+            {/* Divider */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--outline-variant)' }}></div>
+              <span className="label-caps" style={{ color: 'var(--outline)' }}>OR</span>
+              <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--outline-variant)' }}></div>
+            </div>
+
+            {/* ZIP Upload */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <span className="label-caps">Upload Code Archive</span>
+              <input 
+                type="file" 
+                accept=".zip" 
+                ref={fileInputRef}
+                onChange={handleZipUpload}
+                style={{ display: 'none' }}
+              />
+              <button 
+                className="secondary" 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={loading || (jobStatus && jobStatus !== 'done' && jobStatus !== 'error')}
+                style={{ justifyContent: 'center', width: '100%', borderStyle: 'dashed' }}
+              >
+                <Upload size={16} />
+                <SlotText text={loading ? "Uploading..." : "Choose ZIP file"} />
+              </button>
+            </div>
+
+            {/* Recent Jobs */}
+            {recentJobs.length > 0 && (
+              <div style={{ marginTop: '16px' }}>
+                <span className="label-caps" style={{ display: 'block', marginBottom: '8px' }}>Recent Analyses</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {recentJobs.map((job) => (
+                    <div 
+                      key={job.id} 
+                      onClick={() => loadRecentJob(job)}
+                      style={{ 
+                        padding: '10px', 
+                        borderRadius: 'var(--rounded-default)', 
+                        backgroundColor: 'var(--surface-container-low)', 
+                        cursor: 'pointer',
+                        border: jobId === job.id ? '1px solid var(--primary)' : '1px solid transparent',
+                        transition: 'var(--transition-smooth)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '8px'
+                      }}
+                    >
+                      <div style={{ flex: 1, overflow: 'hidden' }}>
+                        <div style={{ fontSize: '13px', fontWeight: '600', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                          {job.name}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--outline)' }}>
+                          {job.source_type === 'github' ? <GitBranch size={10} /> : <Upload size={10} />}
+                          <span>{new Date(job.created_at).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={(e) => removeRecentJob(job.id, e)}
+                        style={{ 
+                          padding: '4px', 
+                          background: 'transparent', 
+                          color: 'var(--outline)',
+                          borderRadius: 'var(--rounded-sm)',
+                          display: 'inline-flex',
+                          border: 'none'
+                        }}
+                        title="Remove analysis"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      ) : null}
+
+      {/* Left Resizer Handle */}
+      {!leftSidebarCollapsed && (
+        <div 
+          onMouseDown={startResizeLeft}
+          style={{ 
+            width: '4px', 
+            cursor: 'col-resize', 
+            backgroundColor: 'var(--outline-variant)',
+            opacity: 0.3,
+            transition: 'opacity 0.2s',
+            alignSelf: 'stretch',
+            zIndex: 10
+          }}
+          onMouseEnter={(e) => e.target.style.opacity = '1'}
+          onMouseLeave={(e) => e.target.style.opacity = '0.3'}
+        />
+      )}
 
       {/* Main Workspace Panel */}
       <div className="main-content">
@@ -362,36 +484,60 @@ function App() {
           alignItems: 'center',
           backgroundColor: 'var(--surface-container-lowest)' 
         }}>
-          {jobStatus === 'done' ? (
-            <div style={{ display: 'flex', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {leftSidebarCollapsed && (
               <button 
-                className={activeTab === 'readme' ? 'primary' : 'secondary'}
-                onClick={() => setActiveTab('readme')}
+                className="secondary" 
+                onClick={() => setLeftSidebarCollapsed(false)}
+                style={{ padding: '8px', display: 'inline-flex' }}
+                title="Expand sidebar"
               >
-                <FileText size={16} />
-                README.md
+                <Menu size={16} />
               </button>
-              <button 
-                className={activeTab === 'devdoc' ? 'primary' : 'secondary'}
-                onClick={() => setActiveTab('devdoc')}
-              >
-                <Code size={16} />
-                DEVELOPER.md
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Terminal size={16} style={{ color: 'var(--outline)' }} />
-              <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--outline)' }}>Workspace Console</span>
-            </div>
-          )}
+            )}
+            {jobStatus === 'done' ? (
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button 
+                  className={activeTab === 'readme' ? 'primary' : 'secondary'}
+                  onClick={() => setActiveTab('readme')}
+                >
+                  <FileText size={16} />
+                  README.md
+                </button>
+                <button 
+                  className={activeTab === 'devdoc' ? 'primary' : 'secondary'}
+                  onClick={() => setActiveTab('devdoc')}
+                >
+                  <Code size={16} />
+                  DEVELOPER.md
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Terminal size={16} style={{ color: 'var(--outline)' }} />
+                <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--outline)' }}>Workspace Console</span>
+              </div>
+            )}
+          </div>
 
-          {jobStatus === 'done' && (
-            <button className="primary" onClick={handleDownload}>
-              <Download size={16} />
-              Download ZIP
-            </button>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {jobStatus === 'done' && (
+              <button className="primary" onClick={handleDownload}>
+                <Download size={16} />
+                Download ZIP
+              </button>
+            )}
+            {jobStatus === 'done' && jobDetails && rightSidebarCollapsed && (
+              <button 
+                className="secondary" 
+                onClick={() => setRightSidebarCollapsed(false)}
+                style={{ padding: '8px', display: 'inline-flex' }}
+                title="Show details"
+              >
+                <Settings size={16} />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Content Box */}
@@ -492,24 +638,51 @@ function App() {
         </div>
       </div>
 
+      {/* Right Resizer Handle */}
+      {jobStatus === 'done' && jobDetails && !rightSidebarCollapsed && (
+        <div 
+          onMouseDown={startResizeRight}
+          style={{ 
+            width: '4px', 
+            cursor: 'col-resize', 
+            backgroundColor: 'var(--outline-variant)',
+            opacity: 0.3,
+            transition: 'opacity 0.2s',
+            alignSelf: 'stretch',
+            zIndex: 10
+          }}
+          onMouseEnter={(e) => e.target.style.opacity = '1'}
+          onMouseLeave={(e) => e.target.style.opacity = '0.3'}
+        />
+      )}
+
       {/* Inspector / Project Details Sidebar */}
-      {jobStatus === 'done' && jobDetails && (
+      {jobStatus === 'done' && jobDetails && !rightSidebarCollapsed && (
         <div style={{ 
-          width: '320px', 
+          width: `${rightSidebarWidth}px`, 
           backgroundColor: 'var(--surface-container-lowest)', 
           borderLeft: '1px solid var(--outline-variant)',
           padding: '24px',
           display: 'flex',
           flexDirection: 'column',
           gap: '24px',
-          overflowY: 'auto'
+          overflowY: 'auto',
+          flexShrink: 0
         }}>
-          <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span className="label-caps">Project Details</span>
-            <h3 style={{ fontSize: '18px', fontWeight: '700', marginTop: '6px' }}>
-              <SlotText text={jobDetails.project_name || 'Codebase'} />
-            </h3>
+            <button 
+              className="secondary" 
+              onClick={() => setRightSidebarCollapsed(true)}
+              style={{ padding: '4px', border: 'none', display: 'inline-flex' }}
+              title="Collapse sidebar"
+            >
+              <ChevronRight size={16} />
+            </button>
           </div>
+          <h3 style={{ fontSize: '18px', fontWeight: '700' }}>
+            <SlotText text={jobDetails.project_name || 'Codebase'} />
+          </h3>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div style={{ padding: '12px', borderRadius: 'var(--rounded-default)', backgroundColor: 'var(--surface-container-low)' }}>

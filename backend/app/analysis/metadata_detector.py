@@ -58,32 +58,34 @@ class MetadataDetector:
             try:
                 with open(req_path, "r", encoding="utf-8", errors="ignore") as f:
                     for line in f:
-                        line = line.strip()
-                        if not line or line.startswith("#") or line.startswith("-"):
+                        # Clean inline comments, markers and URLs
+                        line_clean = line.split("#")[0].split(";")[0].split("@")[0].strip()
+                        if not line_clean or line_clean.startswith("-"):
                             continue
                         
-                        # Simple split on ==, >=, <=, etc.
+                        # Split by first version operator
                         parts = None
-                        for sep in ("==", ">=", "<=", "~=", ">", "<"):
-                            if sep in line:
-                                parts = line.split(sep, 1)
+                        for sep in ("==", ">=", "<=", "~=", "!=", "==="):
+                            if sep in line_clean:
+                                parts = line_clean.split(sep, 1)
                                 name = parts[0].strip()
                                 version = parts[1].strip()
                                 break
                         else:
-                            name = line
+                            name = line_clean
                             version = None
                             
-                        # Clean package names like package[extra]
+                        # Strip extras like [extra_name]
                         name_clean = name.split("[")[0].strip()
-                        if name_clean:
+                        
+                        # Validate package name starts with alphanumeric character
+                        if name_clean and name_clean[0].isalnum():
                             dependencies.append(DependencyInfo(
                                 name=name_clean,
                                 version=version,
                                 source="requirements.txt"
                             ))
                             
-                            # Check framework
                             fw = cls._match_framework(name_clean)
                             if fw:
                                 frameworks.add(fw)
@@ -118,12 +120,23 @@ class MetadataDetector:
                 if isinstance(project_deps, list):
                     for dep in project_deps:
                         # e.g., "fastapi>=0.100.0"
-                        # Simple clean name
-                        name_clean = dep.split(">=")[0].split("==")[0].split("<=")[0].strip()
-                        if name_clean:
+                        dep_clean = dep.split(";")[0].split("#")[0].split("@")[0].strip()
+                        parts = None
+                        for sep in ("==", ">=", "<=", "~=", "!=", "==="):
+                            if sep in dep_clean:
+                                parts = dep_clean.split(sep, 1)
+                                name = parts[0].strip()
+                                version = parts[1].strip()
+                                break
+                        else:
+                            name = dep_clean
+                            version = None
+                            
+                        name_clean = name.split("[")[0].strip()
+                        if name_clean and name_clean[0].isalnum():
                             dependencies.append(DependencyInfo(
                                 name=name_clean,
-                                version=None,
+                                version=version,
                                 source="pyproject.toml"
                             ))
                             fw = cls._match_framework(name_clean)

@@ -55,3 +55,13 @@ def health_check():
 # Include API routers
 app.include_router(analyze_router)
 app.include_router(jobs_router)
+
+if __name__ == "__main__":
+    import uvicorn
+    print("\n" + "="*50)
+    print("CodeAtlas Local Server Details:")
+    print("- API Server: http://127.0.0.1:8000")
+    print("- API Documentation: http://127.0.0.1:8000/docs")
+    print("- API Health Check: http://127.0.0.1:8000/health")
+    print("="*50 + "\n")
+    uvicorn.run("backend.app.main:app", host="127.0.0.1", port=8000, reload=True)
