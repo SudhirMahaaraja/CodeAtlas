@@ -270,3 +270,127 @@ input:focus, select:focus, textarea:focus {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--outline);
 }
+
+/* Markdown Body Render Styling */
+.markdown-body {
+  line-height: 1.8;
+  font-size: 15px;
+}
+
+.markdown-body h1 {
+  margin-top: 36px;
+  margin-bottom: 20px;
+  font-size: 28px;
+  border-bottom: 1px solid var(--outline-variant);
+  padding-bottom: 10px;
+  color: var(--on-surface);
+}
+
+.markdown-body h2 {
+  margin-top: 32px;
+  margin-bottom: 16px;
+  font-size: 22px;
+  border-bottom: 1px solid var(--outline-variant);
+  padding-bottom: 8px;
+  color: var(--on-surface);
+}
+
+.markdown-body h3 {
+  margin-top: 26px;
+  margin-bottom: 12px;
+  font-size: 18px;
+  color: var(--on-surface);
+}
+
+.markdown-body h4 {
+  margin-top: 22px;
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: var(--on-surface);
+}
+
+.markdown-body p {
+  margin-bottom: 18px;
+  color: var(--on-surface-variant);
+}
+
+.markdown-body ul {
+  margin-bottom: 18px;
+  padding-left: 24px;
+  list-style-type: disc;
+}
+
+.markdown-body ol {
+  margin-bottom: 18px;
+  padding-left: 24px;
+  list-style-type: decimal;
+}
+
+.markdown-body li {
+  margin-bottom: 8px;
+  color: var(--on-surface-variant);
+  display: list-item;
+}
+
+.markdown-body pre {
+  margin-top: 14px;
+  margin-bottom: 24px;
+  padding: 16px;
+  overflow-x: auto;
+  border-radius: var(--rounded-md);
+  border: 1px solid var(--outline-variant);
+}
+
+.markdown-body code {
+  padding: 3px 6px;
+  font-size: 0.9em;
+  background-color: var(--surface-container-high);
+  color: var(--primary);
+  border-radius: var(--rounded-sm);
+}
+
+.markdown-body pre code {
+  padding: 0;
+  background-color: transparent;
+  font-size: 14px;
+  color: var(--on-surface-variant);
+}
+
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 28px;
+  margin-top: 14px;
+}
+
+.markdown-body th, .markdown-body td {
+  border: 1px solid var(--outline-variant);
+  padding: 12px 16px;
+  text-align: left;
+}
+
+.markdown-body th {
+  background-color: var(--surface-container-low);
+  font-weight: 600;
+  color: var(--on-surface);
+}
+
+.markdown-body blockquote {
+  border-left: 4px solid var(--primary);
+  padding: 10px 18px;
+  margin: 18px 0;
+  background-color: var(--surface-container-low);
+  border-radius: 0 var(--rounded-default) var(--rounded-default) 0;
+}
+
+.markdown-body blockquote p {
+  margin: 0;
+  font-style: italic;
+}
+
+.markdown-body hr {
+  height: 1px;
+  background-color: var(--outline-variant);
+  border: none;
+  margin: 36px 0;
+}

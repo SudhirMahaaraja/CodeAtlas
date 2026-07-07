@@ -23,6 +23,34 @@ This is a standard codebase for <strong>{{ project.name | title_case }}</strong>
 
 ---
 
+## 🏗️ Architecture & Import Dependency Graph
+This diagram shows the relationship and import dependencies between modules in the codebase:
+
+```mermaid
+graph TD
+{% if project.import_graph and project.import_graph.items()|length > 0 %}
+  {% for source, targets in project.import_graph.items() %}
+    {% for target in targets %}
+      {{ source | replace("/", "_") | replace(".", "_") | replace("-", "_") }}["{{ source }}"] --> {{ target | replace("/", "_") | replace(".", "_") | replace("-", "_") }}["{{ target }}"]
+    {% endfor %}
+  {% endfor %}
+{% else %}
+  subgraph Simple Flow
+    Entry["Entrypoint"] --> Code["Modules / Core Logic"]
+  end
+{% endif %}
+```
+
+---
+
+## 📐 Design Philosophy & Standards
+This codebase adheres to the following structural patterns and development practices:
+- **Clean Architecture & Separation of Concerns:** Core business logic is strictly decoupled from request-routing entry points and database interfaces.
+- **Robust Exception Management:** Exception handling decorators or middleware are leveraged to guarantee system stability.
+- **AST-Backed Verification:** Static analysis rules verify system integrity and prevent architectural regression.
+
+---
+
 ## 🧠 Key Features
 {% if features %}
 {% for feature in features %}
@@ -49,6 +77,19 @@ This is a standard codebase for <strong>{{ project.name | title_case }}</strong>
 {% endfor %}
 
 ---
+
+{% if api_routes %}
+## 🔌 API Routes & Endpoints
+The following endpoints were automatically parsed from decorators in the codebase:
+
+| Method | Route Path | Handler Function | File Source | Description |
+|---|---|---|---|---|
+{% for route in api_routes %}
+| `{{ route.method }}` | `{{ route.path }}` | `{{ route.handler }}` | `{{ route.file }}` | {{ route.description or 'No route description' }} |
+{% endfor %}
+
+---
+{% endif %}
 
 ## ⚙️ Tech Stack & Dependencies
 

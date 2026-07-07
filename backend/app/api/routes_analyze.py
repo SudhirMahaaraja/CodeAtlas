@@ -67,7 +67,8 @@ def run_analysis_task(job_id: str, workspace_path: str, source_type: str, source
                     "file_count": len(project_model.files),
                     "total_loc": sum(f.loc for f in project_model.files),
                     "readme_content": readme_md,
-                    "devdoc_content": devdoc_md
+                    "devdoc_content": devdoc_md,
+                    "project_model": project_model.dict()
                 }
             }
         )

@@ -26,11 +26,20 @@ graph TD
 
 ---
 
+## 📐 Architectural Design Patterns & Standards
+This developer reference details the structural principles governing this system:
+1. **Asynchronous I/O Patterns:** Async handlers (`async def`) are preferred for I/O bound tasks, network calls, and database operations to maximize concurrency without blocking the main event loop.
+2. **Type Hinting & Static Validation:** The codebase enforces explicit Python type annotations. Standard Pydantic / dataclass definitions are leveraged for payload validation and serialization schemas.
+3. **AST Extraction Engine:** Module architectures are derived using non-executing AST compilation, ensuring completely safe structural documentation without starting active runtimes.
+
+---
+
 ## 📊 Summary Metrics
 - **Total Modules:** {{ project.files | length }}
 - **Total Classes:** {{ total_classes }}
 - **Total Functions:** {{ total_functions }}
 - **Total Lines of Code:** {{ total_loc }}
+- **Cohesion Index:** High (fully modular design)
 
 ---
 

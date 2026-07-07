@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Upload, 
-  GitBranch, 
-  Settings, 
-  FileText, 
-  Code, 
-  Layers, 
-  Download, 
-  Sun, 
-  Moon, 
-  Terminal, 
+import {
+  Upload,
+  GitBranch,
+  Settings,
+  FileText,
+  Code,
+  Layers,
+  Download,
+  Sun,
+  Moon,
+  Terminal,
   AlertTriangle,
-  CheckCircle2, 
+  CheckCircle2,
   RefreshCw,
   FolderOpen,
   Hash,
@@ -19,7 +19,8 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  Menu
+  Menu,
+  MessageSquare
 } from 'lucide-react';
 import { marked } from 'marked';
 import { SlotText } from 'slot-text/react';
@@ -50,16 +51,16 @@ function App() {
   const [jobDetails, setJobDetails] = useState(null);
   const [readmeContent, setReadmeContent] = useState('');
   const [devdocContent, setDevdocContent] = useState('');
-  
+
   // Input fields
   const [githubUrl, setGithubUrl] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [recentJobs, setRecentJobs] = useState([]);
-  
+
   // UI states
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  
+
   const fileInputRef = useRef(null);
 
   // Sidebar sizing & collapse states
@@ -106,6 +107,103 @@ function App() {
     document.addEventListener('mouseup', stopDrag);
   };
 
+  // Chat states
+  const [chatHistory, setChatHistory] = useState([]);
+  const [chatInput, setChatInput] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+  const chatEndRef = useRef(null);
+
+  // Auto-scroll chat history
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatHistory]);
+
+  const sendChatMessage = async (question) => {
+    if (!question || !jobId) return;
+
+    // Add user message
+    const userMsg = { role: 'user', content: question };
+    const historyPayload = [...chatHistory, userMsg].map(m => ({ role: m.role, content: m.content }));
+
+    setChatHistory(prev => [...prev, userMsg]);
+    setChatLoading(true);
+    setChatInput('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/jobs/${jobId}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question, history: historyPayload }),
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch chat response');
+
+      // Append assistant message slot to be updated by stream
+      setChatHistory(prev => [...prev, { role: 'assistant', content: '', sources: [] }]);
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // Keep remaining incomplete line
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const data = JSON.parse(line);
+            if (data.token !== undefined) {
+              setChatHistory(prev => {
+                const updated = [...prev];
+                const lastIdx = updated.length - 1;
+                if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
+                  updated[lastIdx] = {
+                    ...updated[lastIdx],
+                    content: updated[lastIdx].content + data.token
+                  };
+                }
+                return updated;
+              });
+            } else if (data.sources !== undefined) {
+              setChatHistory(prev => {
+                const updated = [...prev];
+                const lastIdx = updated.length - 1;
+                if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
+                  updated[lastIdx] = {
+                    ...updated[lastIdx],
+                    sources: data.sources
+                  };
+                }
+                return updated;
+              });
+            }
+          } catch (e) {
+            console.error('Failed to parse NDJSON line:', e);
+          }
+        }
+      }
+    } catch (err) {
+      setChatHistory(prev => [...prev, {
+        role: 'assistant',
+        content: 'Failed to communicate with the codebase assistant. Please verify the backend is running.',
+        sources: []
+      }]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  const handleChatSubmit = (e) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+    sendChatMessage(chatInput);
+  };
+
   // Initialize theme and load recents
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -118,7 +216,7 @@ function App() {
       theme: theme === 'dark' ? 'dark' : 'default',
       securityLevel: 'loose',
     });
-    
+
     if (jobStatus === 'done') {
       const timer = setTimeout(() => {
         try {
@@ -176,11 +274,11 @@ function App() {
       try {
         const response = await fetch(`${API_BASE_URL}/api/jobs/${jobId}`);
         if (!response.ok) throw new Error('Job status check failed');
-        
+
         const data = await response.json();
         setJobStatus(data.status);
         setJobDetails(data);
-        
+
         if (data.status === 'done') {
           clearInterval(interval);
           fetchGeneratedDocs(jobId);
@@ -210,7 +308,7 @@ function App() {
     try {
       const readmeRes = await fetch(`${API_BASE_URL}/api/jobs/${id}/readme`);
       const devdocRes = await fetch(`${API_BASE_URL}/api/jobs/${id}/devdoc`);
-      
+
       if (readmeRes.ok) setReadmeContent(await readmeRes.text());
       if (devdocRes.ok) setDevdocContent(await devdocRes.text());
     } catch (err) {
@@ -294,6 +392,32 @@ function App() {
     window.location.href = `${API_BASE_URL}/api/jobs/${jobId}/download`;
   };
 
+  const downloadReadme = () => {
+    if (!readmeContent) return;
+    const blob = new Blob([readmeContent], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'README.md';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadDevdoc = () => {
+    if (!devdocContent) return;
+    const blob = new Blob([devdocContent], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'DEVELOPER.md';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   // Load a job from the recents list
   const loadRecentJob = (job) => {
     setErrorMsg('');
@@ -311,13 +435,13 @@ function App() {
     <div className="workbench-layout">
       {/* Sidebar Panel */}
       {!leftSidebarCollapsed ? (
-        <div 
-          className="sidebar" 
-          style={{ 
-            width: `${leftSidebarWidth}px`, 
-            display: 'flex', 
-            flexDirection: 'column', 
-            flexShrink: 0 
+        <div
+          className="sidebar"
+          style={{
+            width: `${leftSidebarWidth}px`,
+            display: 'flex',
+            flexDirection: 'column',
+            flexShrink: 0
           }}
         >
           <div style={{ padding: '24px', borderBottom: '1px solid var(--outline-variant)' }}>
@@ -327,17 +451,17 @@ function App() {
                 <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--on-surface)' }}><SlotText text="CodeAtlas" /></h2>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <button 
-                  className="secondary" 
-                  onClick={toggleTheme} 
+                <button
+                  className="secondary"
+                  onClick={toggleTheme}
                   style={{ padding: '6px', borderRadius: 'var(--rounded-md)', display: 'inline-flex' }}
                   title="Toggle theme"
                 >
                   {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
                 </button>
-                <button 
-                  className="secondary" 
-                  onClick={() => setLeftSidebarCollapsed(true)} 
+                <button
+                  className="secondary"
+                  onClick={() => setLeftSidebarCollapsed(true)}
                   style={{ padding: '6px', borderRadius: 'var(--rounded-md)', display: 'inline-flex' }}
                   title="Collapse sidebar"
                 >
@@ -353,19 +477,22 @@ function App() {
             <form onSubmit={handleGithubSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <span className="label-caps">GitHub Repository</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <input 
-                  type="text" 
-                  placeholder="https://github.com/..." 
+                <input
+                  type="text"
+                  placeholder="https://github.com/..."
                   value={githubUrl}
                   onChange={(e) => setGithubUrl(e.target.value)}
                   disabled={loading || (jobStatus && jobStatus !== 'done' && jobStatus !== 'error')}
                   style={{ width: '100%' }}
                 />
-                <button 
-                  type="submit" 
-                  className="primary" 
+                <button
+                  type="submit"
+                  className="primary"
                   disabled={loading || !githubUrl || (jobStatus && jobStatus !== 'done' && jobStatus !== 'error')}
-                  style={{ justifyContent: 'center' }}
+                  style={{
+                    justifyContent: 'center',
+                    color: theme === 'dark' ? '#151615ff' : 'var(--on-primary)'
+                  }}
                 >
                   <GitBranch size={16} />
                   <SlotText text={loading ? "Analyzing..." : "Analyze Link"} />
@@ -383,15 +510,15 @@ function App() {
             {/* ZIP Upload */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <span className="label-caps">Upload Code Archive</span>
-              <input 
-                type="file" 
-                accept=".zip" 
+              <input
+                type="file"
+                accept=".zip"
                 ref={fileInputRef}
                 onChange={handleZipUpload}
                 style={{ display: 'none' }}
               />
-              <button 
-                className="secondary" 
+              <button
+                className="secondary"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={loading || (jobStatus && jobStatus !== 'done' && jobStatus !== 'error')}
                 style={{ justifyContent: 'center', width: '100%', borderStyle: 'dashed' }}
@@ -407,13 +534,13 @@ function App() {
                 <span className="label-caps" style={{ display: 'block', marginBottom: '8px' }}>Recent Analyses</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {recentJobs.map((job) => (
-                    <div 
-                      key={job.id} 
+                    <div
+                      key={job.id}
                       onClick={() => loadRecentJob(job)}
-                      style={{ 
-                        padding: '10px', 
-                        borderRadius: 'var(--rounded-default)', 
-                        backgroundColor: 'var(--surface-container-low)', 
+                      style={{
+                        padding: '10px',
+                        borderRadius: 'var(--rounded-default)',
+                        backgroundColor: 'var(--surface-container-low)',
                         cursor: 'pointer',
                         border: jobId === job.id ? '1px solid var(--primary)' : '1px solid transparent',
                         transition: 'var(--transition-smooth)',
@@ -432,11 +559,11 @@ function App() {
                           <span>{new Date(job.created_at).toLocaleDateString()}</span>
                         </div>
                       </div>
-                      <button 
+                      <button
                         onClick={(e) => removeRecentJob(job.id, e)}
-                        style={{ 
-                          padding: '4px', 
-                          background: 'transparent', 
+                        style={{
+                          padding: '4px',
+                          background: 'transparent',
                           color: 'var(--outline)',
                           borderRadius: 'var(--rounded-sm)',
                           display: 'inline-flex',
@@ -457,11 +584,11 @@ function App() {
 
       {/* Left Resizer Handle */}
       {!leftSidebarCollapsed && (
-        <div 
+        <div
           onMouseDown={startResizeLeft}
-          style={{ 
-            width: '4px', 
-            cursor: 'col-resize', 
+          style={{
+            width: '4px',
+            cursor: 'col-resize',
             backgroundColor: 'var(--outline-variant)',
             opacity: 0.3,
             transition: 'opacity 0.2s',
@@ -476,18 +603,18 @@ function App() {
       {/* Main Workspace Panel */}
       <div className="main-content">
         {/* Navigation & Status Header */}
-        <div style={{ 
-          padding: '16px 24px', 
-          borderBottom: '1px solid var(--outline-variant)', 
-          display: 'flex', 
-          justifyContent: 'space-between', 
+        <div style={{
+          padding: '16px 24px',
+          borderBottom: '1px solid var(--outline-variant)',
+          display: 'flex',
+          justifyContent: 'space-between',
           alignItems: 'center',
-          backgroundColor: 'var(--surface-container-lowest)' 
+          backgroundColor: 'var(--surface-container-lowest)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {leftSidebarCollapsed && (
-              <button 
-                className="secondary" 
+              <button
+                className="secondary"
                 onClick={() => setLeftSidebarCollapsed(false)}
                 style={{ padding: '8px', display: 'inline-flex' }}
                 title="Expand sidebar"
@@ -497,19 +624,26 @@ function App() {
             )}
             {jobStatus === 'done' ? (
               <div style={{ display: 'flex', gap: '12px' }}>
-                <button 
+                <button
                   className={activeTab === 'readme' ? 'primary' : 'secondary'}
                   onClick={() => setActiveTab('readme')}
                 >
                   <FileText size={16} />
                   README.md
                 </button>
-                <button 
+                <button
                   className={activeTab === 'devdoc' ? 'primary' : 'secondary'}
                   onClick={() => setActiveTab('devdoc')}
                 >
                   <Code size={16} />
                   DEVELOPER.md
+                </button>
+                <button
+                  className={activeTab === 'chat' ? 'primary' : 'secondary'}
+                  onClick={() => setActiveTab('chat')}
+                >
+                  <MessageSquare size={16} />
+                  Chat Assistant
                 </button>
               </div>
             ) : (
@@ -520,16 +654,26 @@ function App() {
             )}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {jobStatus === 'done' && (
-              <button className="primary" onClick={handleDownload}>
-                <Download size={16} />
-                Download ZIP
-              </button>
+              <>
+                <button className="secondary" onClick={downloadReadme} title="Download README.md only" style={{ gap: '6px' }}>
+                  <Download size={14} />
+                  README
+                </button>
+                <button className="secondary" onClick={downloadDevdoc} title="Download DEVELOPER.md only" style={{ gap: '6px' }}>
+                  <Download size={14} />
+                  DevDoc
+                </button>
+                <button className="primary" onClick={handleDownload} title="Download both as a ZIP archive" style={{ gap: '6px' }}>
+                  <Download size={14} />
+                  ZIP
+                </button>
+              </>
             )}
             {jobStatus === 'done' && jobDetails && rightSidebarCollapsed && (
-              <button 
-                className="secondary" 
+              <button
+                className="secondary"
                 onClick={() => setRightSidebarCollapsed(false)}
                 style={{ padding: '8px', display: 'inline-flex' }}
                 title="Show details"
@@ -543,13 +687,13 @@ function App() {
         {/* Content Box */}
         <div style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
           {errorMsg && (
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'flex-start', 
-              gap: '12px', 
-              padding: '16px', 
-              backgroundColor: 'rgba(255, 179, 175, 0.1)', 
-              border: '1px solid var(--error)', 
+            <div style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '12px',
+              padding: '16px',
+              backgroundColor: 'rgba(255, 179, 175, 0.1)',
+              border: '1px solid var(--error)',
               borderRadius: 'var(--rounded-md)',
               marginBottom: '20px'
             }}>
@@ -621,18 +765,107 @@ function App() {
 
           {/* Done rendering tab */}
           {jobStatus === 'done' && (
-            <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-              <div 
-                className="markdown-body"
-                dangerouslySetInnerHTML={{ 
-                  __html: marked.parse(activeTab === 'readme' ? readmeContent : devdocContent, { renderer: customRenderer }) 
-                }} 
-                style={{
-                  lineHeight: '1.6',
-                  color: 'var(--on-surface)',
-                  fontFamily: 'var(--font-body)'
-                }}
-              />
+            <div style={{ maxWidth: '900px', margin: '0 auto', height: '100%', display: 'flex', flexDirection: 'column' }}>
+              {activeTab === 'chat' ? (
+                <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '12px', paddingBottom: '20px' }}>
+                  {chatHistory.length > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <button
+                        className="secondary"
+                        onClick={() => setChatHistory([])}
+                        style={{ padding: '6px 12px', fontSize: '12px' }}
+                      >
+                        Clear Chat History
+                      </button>
+                    </div>
+                  )}
+                  <div style={{
+                    flex: 1,
+                    backgroundColor: 'var(--surface-container-lowest)',
+                    border: '1px solid var(--outline-variant)',
+                    borderRadius: 'var(--rounded-lg)',
+                    padding: '24px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '16px',
+                    overflowY: 'auto',
+                    minHeight: '380px'
+                  }}>
+                    {chatHistory.length === 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '300px', gap: '12px', textAlign: 'center', color: 'var(--outline)' }}>
+                        <MessageSquare size={48} style={{ color: 'var(--primary)', opacity: 0.8 }} />
+                        <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--on-surface)' }}>Ask Codebase Assistant</h3>
+                        <p style={{ fontSize: '13px', maxWidth: '400px' }}>
+                          Get instant, rule-based details about the codebase structure, dependencies, APIs, and components without external AI calls.
+                        </p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', marginTop: '12px', maxWidth: '550px' }}>
+                          <button className="secondary" onClick={() => sendChatMessage("What dependencies are used?")} style={{ fontSize: '12px', padding: '6px 12px' }}>📦 Dependencies</button>
+                          <button className="secondary" onClick={() => sendChatMessage("List all API routes")} style={{ fontSize: '12px', padding: '6px 12px' }}>🔌 API Routes</button>
+                          <button className="secondary" onClick={() => sendChatMessage("What technologies are in this stack?")} style={{ fontSize: '12px', padding: '6px 12px' }}>🛠️ Tech Stack</button>
+                          <button className="secondary" onClick={() => sendChatMessage("Show files overview")} style={{ fontSize: '12px', padding: '6px 12px' }}>📁 Files Overview</button>
+                        </div>
+                      </div>
+                    ) : (
+                      chatHistory.map((msg, idx) => (
+                        <div
+                          key={idx}
+                          style={{
+                            alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                            maxWidth: '85%',
+                            backgroundColor: msg.role === 'user' ? 'var(--primary)' : 'var(--surface-container-low)',
+                            color: msg.role === 'user' ? 'var(--on-primary)' : 'var(--on-surface)',
+                            padding: '12px 18px',
+                            borderRadius: 'var(--rounded-md)',
+                            border: msg.role === 'user' ? 'none' : '1px solid var(--outline-variant)'
+                          }}
+                        >
+                          <div style={{ fontSize: '11px', fontWeight: '700', opacity: 0.8, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            {msg.role === 'user' ? 'You' : 'Assistant'}
+                          </div>
+                          <div
+                            className="markdown-body"
+                            dangerouslySetInnerHTML={{ __html: marked.parse(msg.content, { renderer: customRenderer }) }}
+                            style={{ fontSize: '14px', lineHeight: '1.6' }}
+                          />
+                          {msg.sources && msg.sources.length > 0 && (
+                            <div style={{ marginTop: '8px', borderTop: '1px solid var(--outline-variant)', paddingTop: '6px', fontSize: '11px', color: 'var(--on-surface-variant)' }}>
+                              <strong>Sources:</strong> {msg.sources.join(', ')}
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
+                    <div ref={chatEndRef} />
+                  </div>
+
+                  <form onSubmit={handleChatSubmit} style={{ display: 'flex', gap: '10px' }}>
+                    <input
+                      type="text"
+                      placeholder="Ask a question about the files, classes, or dependencies..."
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      style={{ flex: 1 }}
+                      disabled={chatLoading}
+                    />
+                    <button type="submit" className="primary" disabled={!chatInput.trim() || chatLoading}>
+                      <MessageSquare size={16} />
+                      Send
+                    </button>
+                  </form>
+                </div>
+              ) : (
+                <div
+                  className="markdown-body"
+                  dangerouslySetInnerHTML={{
+                    __html: marked.parse(activeTab === 'readme' ? readmeContent : devdocContent, { renderer: customRenderer })
+                  }}
+                  style={{
+                    lineHeight: '1.6',
+                    color: 'var(--on-surface)',
+                    fontFamily: 'var(--font-body)'
+                  }}
+                />
+              )}
             </div>
           )}
         </div>
@@ -640,11 +873,11 @@ function App() {
 
       {/* Right Resizer Handle */}
       {jobStatus === 'done' && jobDetails && !rightSidebarCollapsed && (
-        <div 
+        <div
           onMouseDown={startResizeRight}
-          style={{ 
-            width: '4px', 
-            cursor: 'col-resize', 
+          style={{
+            width: '4px',
+            cursor: 'col-resize',
             backgroundColor: 'var(--outline-variant)',
             opacity: 0.3,
             transition: 'opacity 0.2s',
@@ -658,9 +891,9 @@ function App() {
 
       {/* Inspector / Project Details Sidebar */}
       {jobStatus === 'done' && jobDetails && !rightSidebarCollapsed && (
-        <div style={{ 
-          width: `${rightSidebarWidth}px`, 
-          backgroundColor: 'var(--surface-container-lowest)', 
+        <div style={{
+          width: `${rightSidebarWidth}px`,
+          backgroundColor: 'var(--surface-container-lowest)',
           borderLeft: '1px solid var(--outline-variant)',
           padding: '24px',
           display: 'flex',
@@ -671,8 +904,8 @@ function App() {
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span className="label-caps">Project Details</span>
-            <button 
-              className="secondary" 
+            <button
+              className="secondary"
               onClick={() => setRightSidebarCollapsed(true)}
               style={{ padding: '4px', border: 'none', display: 'inline-flex' }}
               title="Collapse sidebar"
@@ -707,15 +940,15 @@ function App() {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
               {jobDetails.frameworks && jobDetails.frameworks.length > 0 ? (
                 jobDetails.frameworks.map((fw) => (
-                  <span 
-                    key={fw} 
-                    style={{ 
-                      fontSize: '11px', 
-                      fontWeight: '600', 
-                      padding: '4px 10px', 
-                      borderRadius: 'var(--rounded-full)', 
-                      backgroundColor: 'var(--primary-container)', 
-                      color: 'var(--on-primary-container)' 
+                  <span
+                    key={fw}
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: '600',
+                      padding: '4px 10px',
+                      borderRadius: 'var(--rounded-full)',
+                      backgroundColor: 'var(--primary-container)',
+                      color: 'var(--on-primary-container)'
                     }}
                   >
                     {fw}
@@ -730,10 +963,10 @@ function App() {
           {jobDetails.dependencies && jobDetails.dependencies.length > 0 && (
             <div>
               <span className="label-caps">Dependencies ({jobDetails.dependencies.length})</span>
-              <div style={{ 
-                marginTop: '8px', 
-                maxHeight: '300px', 
-                overflowY: 'auto', 
+              <div style={{
+                marginTop: '8px',
+                maxHeight: '300px',
+                overflowY: 'auto',
                 border: '1px solid var(--outline-variant)',
                 borderRadius: 'var(--rounded-default)'
               }}>
