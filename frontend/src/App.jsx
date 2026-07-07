@@ -5,7 +5,6 @@ import {
   Settings,
   FileText,
   Code,
-  Layers,
   Download,
   Sun,
   Moon,
@@ -24,6 +23,25 @@ import {
 } from 'lucide-react';
 import { marked } from 'marked';
 import mermaid from 'mermaid';
+
+const CodeSquareLogo = ({ size = 24, ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+    <path d="m10 10-2 2 2 2"/>
+    <path d="m14 14 2-2-2-2"/>
+  </svg>
+);
 
 const customRenderer = new marked.Renderer();
 customRenderer.code = (code, lang) => {
@@ -515,7 +533,7 @@ function App() {
           <div style={{ padding: '24px', borderBottom: '1px solid var(--outline-variant)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Layers style={{ color: 'var(--primary)', width: '24px', height: '24px' }} />
+                <CodeSquareLogo style={{ color: 'var(--primary)', width: '24px', height: '24px' }} />
                 <h2 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--on-surface)', letterSpacing: '-0.02em' }}>CodeAtlas</h2>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -834,7 +852,7 @@ function App() {
                   marginBottom: '24px',
                   boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
                 }}>
-                  <Layers size={32} />
+                  <CodeSquareLogo size={32} />
                 </div>
                 <h1 className="landing-title">
                   CodeAtlas Workspace
@@ -878,7 +896,7 @@ function App() {
                       background: 'var(--surface-container-high)', 
                       color: 'var(--primary)' 
                     }}>
-                      <Layers size={20} />
+                      <CodeSquareLogo size={20} />
                     </div>
                     <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--on-surface)' }}>Visual Dependency Mapping</h3>
                   </div>
