@@ -23,8 +23,6 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { marked } from 'marked';
-import { SlotText } from 'slot-text/react';
-import 'slot-text/style.css';
 import mermaid from 'mermaid';
 
 const customRenderer = new marked.Renderer();
@@ -56,6 +54,12 @@ function App() {
   const [githubUrl, setGithubUrl] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [recentJobs, setRecentJobs] = useState([]);
+  const [downloadModal, setDownloadModal] = useState({
+    isOpen: false,
+    fileName: '',
+    progress: 0,
+    status: 'preparing'
+  });
 
   // UI states
   const [loading, setLoading] = useState(false);
@@ -397,35 +401,87 @@ function App() {
   };
 
   // Download docs ZIP
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!jobId) return;
-    window.location.href = `${API_BASE_URL}/api/jobs/${jobId}/download`;
+    const projName = jobDetails?.project_name || 'project';
+    setDownloadModal({
+      isOpen: true,
+      fileName: `${projName}_docs.zip`,
+      progress: 10,
+      status: 'preparing'
+    });
+
+    setTimeout(() => {
+      setDownloadModal(prev => ({ ...prev, progress: 40, status: 'downloading' }));
+    }, 400);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/jobs/${jobId}/download`);
+      if (!response.ok) throw new Error('Download failed');
+      
+      setDownloadModal(prev => ({ ...prev, progress: 80 }));
+      
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${projName}_docs.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setDownloadModal({
+        isOpen: true,
+        fileName: `${projName}_docs.zip`,
+        progress: 100,
+        status: 'completed'
+      });
+    } catch (err) {
+      setDownloadModal(prev => ({ ...prev, isOpen: false }));
+      alert('Failed to download ZIP archive');
+    }
+  };
+
+  const handleDownloadMarkdown = (content, filename) => {
+    if (!content) return;
+    setDownloadModal({
+      isOpen: true,
+      fileName: filename,
+      progress: 20,
+      status: 'preparing'
+    });
+
+    setTimeout(() => {
+      setDownloadModal(prev => ({ ...prev, progress: 70, status: 'downloading' }));
+      
+      setTimeout(() => {
+        const blob = new Blob([content], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        setDownloadModal({
+          isOpen: true,
+          fileName: filename,
+          progress: 100,
+          status: 'completed'
+        });
+      }, 500);
+    }, 300);
   };
 
   const downloadReadme = () => {
-    if (!readmeContent) return;
-    const blob = new Blob([readmeContent], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'README.md';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    handleDownloadMarkdown(readmeContent, 'README.md');
   };
 
   const downloadDevdoc = () => {
-    if (!devdocContent) return;
-    const blob = new Blob([devdocContent], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'DEVELOPER.md';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    handleDownloadMarkdown(devdocContent, 'DEVELOPER.md');
   };
 
   // Load a job from the recents list
@@ -458,7 +514,7 @@ function App() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Layers style={{ color: 'var(--primary)', width: '24px', height: '24px' }} />
-                <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--on-surface)' }}><SlotText text="CodeAtlas" /></h2>
+                <h2 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--on-surface)', letterSpacing: '-0.02em' }}>CodeAtlas</h2>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <button
@@ -504,7 +560,7 @@ function App() {
                   }}
                 >
                   <GitBranch size={16} />
-                  <SlotText text={loading ? "Analyzing..." : "Analyze Link"} />
+                  <span>{loading ? "Analyzing..." : "Analyze Link"}</span>
                 </button>
               </div>
             </form>
@@ -533,7 +589,7 @@ function App() {
                 style={{ justifyContent: 'center', width: '100%', borderStyle: 'dashed' }}
               >
                 <Upload size={16} />
-                <SlotText text={loading ? "Uploading..." : "Choose ZIP file"} />
+                <span>{loading ? "Uploading..." : "Choose ZIP file"}</span>
               </button>
             </div>
 
@@ -764,8 +820,8 @@ function App() {
                 }}>
                   <Layers size={32} />
                 </div>
-                <h1 style={{ fontSize: '36px', fontWeight: '800', marginBottom: '16px', color: 'var(--on-surface)', letterSpacing: '-0.02em' }}>
-                  <SlotText text="CodeAtlas Workspace" />
+                <h1 className="landing-title">
+                  CodeAtlas Workspace
                 </h1>
                 <p style={{ fontSize: '15px', color: 'var(--on-surface-variant)', maxWidth: '620px', margin: '0 auto', lineHeight: '1.6' }}>
                   To begin, use the sidebar to clone a public GitHub repository or upload a local project ZIP archive. CodeAtlas will parse the codebase structure, build AST models, and map relative imports dynamically.
@@ -841,7 +897,7 @@ function App() {
 
           {/* Done rendering tab */}
           {jobStatus === 'done' && (
-            <div style={{ maxWidth: '900px', margin: '0 auto', height: '100%', display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
+            <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
               {activeTab === 'chat' ? (
                 <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '12px', paddingBottom: '20px' }}>
                   {chatHistory.length > 0 && (
@@ -931,7 +987,7 @@ function App() {
                   </form>
                 </div>
               ) : activeTab === 'explorer' ? (
-                <div style={{ display: 'flex', gap: '24px', height: '100%', minHeight: '500px' }}>
+                <div style={{ display: 'flex', gap: '24px', flex: 1, height: '100%', minHeight: '500px', overflow: 'hidden', paddingBottom: '20px' }}>
                   {/* Left: Interactive File Tree */}
                   <div style={{
                     width: '320px',
@@ -940,7 +996,7 @@ function App() {
                     borderRadius: 'var(--rounded-lg)',
                     padding: '20px',
                     overflowY: 'auto',
-                    maxHeight: '70vh'
+                    height: '100%'
                   }}>
                     <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', color: 'var(--on-surface)' }}>Repository Tree</h3>
                     <FileTree 
@@ -958,7 +1014,7 @@ function App() {
                     borderRadius: 'var(--rounded-lg)',
                     padding: '24px',
                     overflowY: 'auto',
-                    maxHeight: '70vh'
+                    height: '100%'
                   }}>
                     {selectedExplorerFile ? (
                       <FileInspector file={selectedExplorerFile} />
@@ -1031,8 +1087,8 @@ function App() {
               <ChevronRight size={16} />
             </button>
           </div>
-          <h3 style={{ fontSize: '18px', fontWeight: '700' }}>
-            <SlotText text={jobDetails.project_name || 'Codebase'} />
+          <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--on-surface)' }}>
+            {jobDetails.project_name || 'Codebase'}
           </h3>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -1107,6 +1163,90 @@ function App() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Download Progress Modal */}
+      {downloadModal.isOpen && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          animation: 'fadeIn 0.3s ease'
+        }}>
+          <div style={{
+            width: '420px',
+            background: theme === 'dark' ? 'rgba(22, 29, 25, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+            border: '1px solid var(--outline-variant)',
+            borderRadius: 'var(--rounded-xl)',
+            padding: '32px',
+            boxShadow: '0 24px 64px rgba(0, 0, 0, 0.3)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '20px',
+            textAlign: 'center',
+            animation: 'scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '56px',
+              height: '56px',
+              borderRadius: 'var(--rounded-full)',
+              background: downloadModal.status === 'completed' ? 'rgba(90, 221, 170, 0.15)' : 'var(--primary-container)',
+              color: downloadModal.status === 'completed' ? 'var(--primary)' : 'var(--on-primary-container)',
+              transition: 'all 0.3s ease'
+            }}>
+              {downloadModal.status === 'completed' ? (
+                <CheckCircle2 size={28} />
+              ) : (
+                <Download size={28} className={downloadModal.status === 'downloading' ? 'bounce-anim' : ''} />
+              )}
+            </div>
+
+            <div>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--on-surface)', marginBottom: '6px' }}>
+                {downloadModal.status === 'completed' ? 'Download Complete!' : 'Downloading File'}
+              </h3>
+              <p style={{ fontSize: '13px', color: 'var(--on-surface-variant)', wordBreak: 'break-all' }}>
+                {downloadModal.fileName}
+              </p>
+            </div>
+
+            {/* Progress Bar Container */}
+            <div style={{ width: '100%', height: '6px', backgroundColor: 'var(--surface-container-high)', borderRadius: 'var(--rounded-full)', overflow: 'hidden', position: 'relative' }}>
+              <div style={{
+                width: `${downloadModal.progress}%`,
+                height: '100%',
+                backgroundColor: 'var(--primary)',
+                borderRadius: 'var(--rounded-full)',
+                transition: 'width 0.4s ease'
+              }} />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', fontSize: '11px', color: 'var(--outline)' }} className="label-caps">
+              <span>{downloadModal.status.toUpperCase()}</span>
+              <span>{downloadModal.progress}%</span>
+            </div>
+
+            {downloadModal.status === 'completed' && (
+              <button
+                className="primary"
+                onClick={() => setDownloadModal(prev => ({ ...prev, isOpen: false }))}
+                style={{ width: '100%', justifyContent: 'center', marginTop: '8px' }}
+              >
+                Done
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -1337,6 +1477,12 @@ function FileInspector({ file }) {
 
 function FluidGradient({ theme }) {
   const canvasRef = useRef(null);
+  const themeRef = useRef(theme);
+
+  // Keep themeRef updated
+  useEffect(() => {
+    themeRef.current = theme;
+  }, [theme]);
 
   useEffect(() => {
     const c = canvasRef.current;
@@ -1345,30 +1491,12 @@ function FluidGradient({ theme }) {
     if (!gl) return;
 
     const vs = `attribute vec4 p;void main(){gl_Position=p;}`;
-
-    const colorsDark = `
-      vec3 cCyan  =vec3(0.3529,0.8667,0.6667);
-      vec3 cYellow=vec3(0.0549,0.0824,0.0667);
-      vec3 cOrange=vec3(0.8667,0.8941,0.8706);
-      vec3 cPurple=vec3(0.7373,0.7922,0.7529);
-      vec3 cBlue  =vec3(0.0863,0.1137,0.0980);
-    `;
-
-    const colorsLight = `
-      vec3 cCyan  =vec3(0.0000,0.4235,0.2980);
-      vec3 cYellow=vec3(0.9569,0.9686,0.9608);
-      vec3 cOrange=vec3(0.0510,0.0824,0.0667);
-      vec3 cPurple=vec3(0.2275,0.2784,0.2510);
-      vec3 cBlue  =vec3(0.9412,0.9608,0.9490);
-    `;
-
-    const colorDefinitions = theme === 'dark' ? colorsDark : colorsLight;
-
     const fs = `
       precision highp float;
       uniform vec2 u_resolution;
       uniform float u_time;
       uniform vec2 u_mouse;
+      uniform vec3 u_colors[5];
 
       vec3 mod289(vec3 x){return x-floor(x*(1./289.))*289.;}
       vec2 mod289(vec2 x){return x-floor(x*(1./289.))*289.;}
@@ -1414,7 +1542,11 @@ function FluidGradient({ theme }) {
           uv.x+=w1*0.3200 - warp_offset.x;
           uv.y+=w2*0.3200 - warp_offset.y;
 
-          ${colorDefinitions}
+          vec3 cCyan   = u_colors[0];
+          vec3 cYellow = u_colors[1];
+          vec3 cOrange = u_colors[2];
+          vec3 cPurple = u_colors[3];
+          vec3 cBlue   = u_colors[4];
     
           float n1=snoise(uv*1.2+vec2(t,0.))*.5+.5;
           float n2=snoise(uv*1.5-vec2(0.,t*.6))*.5+.5;
@@ -1453,6 +1585,23 @@ function FluidGradient({ theme }) {
     const ur = gl.getUniformLocation(prog, 'u_resolution');
     const ut = gl.getUniformLocation(prog, 'u_time');
     const um = gl.getUniformLocation(prog, 'u_mouse');
+    const uc = gl.getUniformLocation(prog, 'u_colors');
+
+    const colorsDark = [
+      0.3529, 0.8667, 0.6667,
+      0.0549, 0.0824, 0.0667,
+      0.8667, 0.8941, 0.8706,
+      0.7373, 0.7922, 0.7529,
+      0.0863, 0.1137, 0.0980
+    ];
+
+    const colorsLight = [
+      0.0000, 0.4235, 0.2980,
+      0.9569, 0.9686, 0.9608,
+      0.0510, 0.0824, 0.0667,
+      0.2275, 0.2784, 0.2510,
+      0.9412, 0.9608, 0.9490
+    ];
 
     let mx = 0.5, my = 0.5, tx = 0.5, ty = 0.5;
 
@@ -1492,6 +1641,10 @@ function FluidGradient({ theme }) {
       mx += (tx - mx) * 0.08;
       my += (ty - my) * 0.08;
       gl.uniform2f(um, mx, my);
+
+      const activeColors = themeRef.current === 'dark' ? colorsDark : colorsLight;
+      gl.uniform3fv(uc, activeColors);
+
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       animationFrameId = requestAnimationFrame(draw);
     }
@@ -1503,7 +1656,7 @@ function FluidGradient({ theme }) {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('touchmove', handleTouchMove);
     };
-  }, [theme]);
+  }, []);
 
   return (
     <canvas
