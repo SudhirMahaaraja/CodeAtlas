@@ -670,29 +670,29 @@ function App() {
       {/* Main Workspace Panel */}
       <div className="main-content">
         {/* Navigation & Status Header */}
-        <div className="nav-header">
-          {/* Left: Sidebar Toggle and Title */}
-          <div className="nav-header-left">
-            {leftSidebarCollapsed && (
-              <button
-                className="secondary"
-                onClick={() => setLeftSidebarCollapsed(false)}
-                style={{ padding: '8px', display: 'inline-flex' }}
-                title="Expand sidebar"
-              >
-                <Menu size={16} />
-              </button>
-            )}
-            {jobStatus !== 'done' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Terminal size={16} style={{ color: 'var(--outline)' }} />
-                <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--outline)' }}>Workspace Console</span>
-              </div>
-            )}
-          </div>
+        {jobStatus === 'done' ? (
+          <div className="nav-header">
+            {/* Left: Sidebar Toggle and Title */}
+            <div className="nav-header-left">
+              {leftSidebarCollapsed && (
+                <button
+                  className="secondary"
+                  onClick={() => setLeftSidebarCollapsed(false)}
+                  style={{ padding: '8px', display: 'inline-flex' }}
+                  title="Expand sidebar"
+                >
+                  <Menu size={16} />
+                </button>
+              )}
+              {jobStatus !== 'done' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Terminal size={16} style={{ color: 'var(--outline)' }} />
+                  <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--outline)' }}>Workspace Console</span>
+                </div>
+              )}
+            </div>
 
-          {/* Center: macOS Style Floating Dock */}
-          {jobStatus === 'done' && (
+            {/* Center: macOS Style Floating Dock */}
             <div className="nav-tabs">
               <button
                 className={activeTab === 'readme' ? 'primary' : 'secondary'}
@@ -723,38 +723,52 @@ function App() {
                 File Explorer
               </button>
             </div>
-          )}
 
-          {/* Right: Actions */}
-          <div className="nav-actions">
-            {jobStatus === 'done' && (
-              <>
-                <button className="secondary" onClick={downloadReadme} title="Download README.md only" style={{ gap: '6px' }}>
-                  <Download size={14} />
-                  README
-                </button>
-                <button className="secondary" onClick={downloadDevdoc} title="Download DEVELOPER.md only" style={{ gap: '6px' }}>
-                  <Download size={14} />
-                  DevDoc
-                </button>
-                <button className="primary" onClick={handleDownload} title="Download both as a ZIP archive" style={{ gap: '6px' }}>
-                  <Download size={14} />
-                  ZIP
-                </button>
-              </>
-            )}
-            {jobStatus === 'done' && jobDetails && rightSidebarCollapsed && (
-              <button
-                className="secondary"
-                onClick={() => setRightSidebarCollapsed(false)}
-                style={{ padding: '8px', display: 'inline-flex' }}
-                title="Show details"
-              >
-                <Settings size={16} />
+            {/* Right: Actions */}
+            <div className="nav-actions">
+              <button className="secondary" onClick={downloadReadme} title="Download README.md only" style={{ gap: '6px' }}>
+                <Download size={14} />
+                README
               </button>
-            )}
+              <button className="secondary" onClick={downloadDevdoc} title="Download DEVELOPER.md only" style={{ gap: '6px' }}>
+                <Download size={14} />
+                DevDoc
+              </button>
+              <button className="primary" onClick={handleDownload} title="Download both as a ZIP archive" style={{ gap: '6px' }}>
+                <Download size={14} />
+                ZIP
+              </button>
+              {jobDetails && rightSidebarCollapsed && (
+                <button
+                  className="secondary"
+                  onClick={() => setRightSidebarCollapsed(false)}
+                  style={{ padding: '8px', display: 'inline-flex' }}
+                  title="Show details"
+                >
+                  <Settings size={16} />
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        ) : (
+          leftSidebarCollapsed && (
+            <button
+              className="secondary"
+              onClick={() => setLeftSidebarCollapsed(false)}
+              style={{
+                position: 'absolute',
+                top: '24px',
+                left: '24px',
+                zIndex: 100,
+                padding: '8px',
+                display: 'inline-flex'
+              }}
+              title="Expand sidebar"
+            >
+              <Menu size={16} />
+            </button>
+          )
+        )}
 
         {/* Content Box */}
         <div style={{ 
