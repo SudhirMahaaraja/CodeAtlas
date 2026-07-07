@@ -613,6 +613,7 @@ function App() {
       <div className="main-content">
         {/* Navigation & Status Header */}
         <div className="nav-header">
+          {/* Left: Sidebar Toggle and Title */}
           <div className="nav-header-left">
             {leftSidebarCollapsed && (
               <button
@@ -624,38 +625,7 @@ function App() {
                 <Menu size={16} />
               </button>
             )}
-            {jobStatus === 'done' ? (
-              <div className="nav-tabs">
-                <button
-                  className={activeTab === 'readme' ? 'primary' : 'secondary'}
-                  onClick={() => setActiveTab('readme')}
-                >
-                  <FileText size={16} />
-                  README.md
-                </button>
-                <button
-                  className={activeTab === 'devdoc' ? 'primary' : 'secondary'}
-                  onClick={() => setActiveTab('devdoc')}
-                >
-                  <Code size={16} />
-                  DEVELOPER.md
-                </button>
-                <button
-                  className={activeTab === 'chat' ? 'primary' : 'secondary'}
-                  onClick={() => setActiveTab('chat')}
-                >
-                  <MessageSquare size={16} />
-                  Chat Assistant
-                </button>
-                <button
-                  className={activeTab === 'explorer' ? 'primary' : 'secondary'}
-                  onClick={() => setActiveTab('explorer')}
-                >
-                  <FolderOpen size={16} />
-                  File Explorer
-                </button>
-              </div>
-            ) : (
+            {jobStatus !== 'done' && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Terminal size={16} style={{ color: 'var(--outline)' }} />
                 <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--outline)' }}>Workspace Console</span>
@@ -663,6 +633,41 @@ function App() {
             )}
           </div>
 
+          {/* Center: macOS Style Floating Dock */}
+          {jobStatus === 'done' && (
+            <div className="nav-tabs">
+              <button
+                className={activeTab === 'readme' ? 'primary' : 'secondary'}
+                onClick={() => setActiveTab('readme')}
+              >
+                <FileText size={16} />
+                README.md
+              </button>
+              <button
+                className={activeTab === 'devdoc' ? 'primary' : 'secondary'}
+                onClick={() => setActiveTab('devdoc')}
+              >
+                <Code size={16} />
+                DEVELOPER.md
+              </button>
+              <button
+                className={activeTab === 'chat' ? 'primary' : 'secondary'}
+                onClick={() => setActiveTab('chat')}
+              >
+                <MessageSquare size={16} />
+                Chat Assistant
+              </button>
+              <button
+                className={activeTab === 'explorer' ? 'primary' : 'secondary'}
+                onClick={() => setActiveTab('explorer')}
+              >
+                <FolderOpen size={16} />
+                File Explorer
+              </button>
+            </div>
+          )}
+
+          {/* Right: Actions */}
           <div className="nav-actions">
             {jobStatus === 'done' && (
               <>
@@ -694,7 +699,16 @@ function App() {
         </div>
 
         {/* Content Box */}
-        <div style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+        <div style={{ 
+          flex: 1, 
+          padding: '40px', 
+          overflowY: 'auto', 
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: !jobStatus ? 'center' : 'stretch'
+        }}>
+          {jobStatus !== 'done' && <FluidGradient theme={theme} />}
           {errorMsg && (
             <div style={{
               display: 'flex',
@@ -704,7 +718,9 @@ function App() {
               backgroundColor: 'rgba(255, 179, 175, 0.1)',
               border: '1px solid var(--error)',
               borderRadius: 'var(--rounded-md)',
-              marginBottom: '20px'
+              marginBottom: '20px',
+              position: 'relative',
+              zIndex: 1
             }}>
               <AlertTriangle style={{ color: 'var(--tertiary)', flexShrink: 0 }} />
               <div>
@@ -716,35 +732,86 @@ function App() {
 
           {/* Default Landing Page */}
           {!jobStatus && (
-            <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '30px' }}>
-              <div style={{ margin: '40px 0 20px 0' }}>
-                <Layers style={{ color: 'var(--primary)', width: '64px', height: '64px', margin: '0 auto 20px auto' }} />
-                <h1 style={{ fontSize: '40px', fontWeight: '800', marginBottom: '12px', color: 'var(--on-surface)' }}>
-                  <SlotText text="Interactive Codebase Visualizer" />
+            <div style={{ 
+              maxWidth: '850px', 
+              margin: 'auto', 
+              padding: '48px', 
+              borderRadius: 'var(--rounded-xl)', 
+              background: theme === 'dark' ? 'rgba(14, 21, 17, 0.55)' : 'rgba(255, 255, 255, 0.65)', 
+              backdropFilter: 'blur(24px)', 
+              WebkitBackdropFilter: 'blur(24px)', 
+              border: '1px solid var(--outline-variant)', 
+              boxShadow: theme === 'dark' ? '0 24px 64px rgba(0, 0, 0, 0.4)' : '0 24px 64px rgba(0, 108, 76, 0.05)',
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: '36px',
+              animation: 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both',
+              position: 'relative',
+              zIndex: 1
+            }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  width: '64px', 
+                  height: '64px', 
+                  borderRadius: 'var(--rounded-full)', 
+                  background: 'var(--primary-container)', 
+                  color: 'var(--on-primary-container)',
+                  marginBottom: '24px',
+                  boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
+                }}>
+                  <Layers size={32} />
+                </div>
+                <h1 style={{ fontSize: '36px', fontWeight: '800', marginBottom: '16px', color: 'var(--on-surface)', letterSpacing: '-0.02em' }}>
+                  <SlotText text="CodeAtlas Workspace" />
                 </h1>
-                <p style={{ fontSize: '18px', color: 'var(--on-surface-variant)' }}>
-                  Upload a ZIP or submit a public GitHub repository. Get comprehensive, rule-based README and DEVELOPER documentation with zero external LLM calls.
+                <p style={{ fontSize: '15px', color: 'var(--on-surface-variant)', maxWidth: '620px', margin: '0 auto', lineHeight: '1.6' }}>
+                  To begin, use the sidebar to clone a public GitHub repository or upload a local project ZIP archive. CodeAtlas will parse the codebase structure, build AST models, and map relative imports dynamically.
                 </p>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', textAlign: 'left' }}>
-                <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <Code style={{ color: 'var(--primary)' }} />
-                    <h3 style={{ fontSize: '16px', fontWeight: '700' }}>Static AST Analysis</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', textAlign: 'left' }}>
+                <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '24px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      width: '36px', 
+                      height: '36px', 
+                      borderRadius: 'var(--rounded-md)', 
+                      background: 'var(--surface-container-high)', 
+                      color: 'var(--primary)' 
+                    }}>
+                      <Code size={20} />
+                    </div>
+                    <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--on-surface)' }}>Static AST Analysis Heuristics</h3>
                   </div>
-                  <p style={{ fontSize: '13px' }}>
-                    Extracts modules, classes, decorators, imports, methods, parameters, and function calls from Python code using python standard ast parsing.
+                  <p style={{ fontSize: '13px', color: 'var(--on-surface-variant)', lineHeight: '1.6' }}>
+                    Extracts modules, classes, decorators, imports, methods, parameters, and function calls from Python and JS/TS codebases using secure, local standard AST parsers.
                   </p>
                 </div>
 
-                <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <Layers style={{ color: 'var(--primary)' }} />
-                    <h3 style={{ fontSize: '16px', fontWeight: '700' }}>Architecture Mapping</h3>
+                <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '24px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      width: '36px', 
+                      height: '36px', 
+                      borderRadius: 'var(--rounded-md)', 
+                      background: 'var(--surface-container-high)', 
+                      color: 'var(--primary)' 
+                    }}>
+                      <Layers size={20} />
+                    </div>
+                    <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--on-surface)' }}>Visual Dependency Mapping</h3>
                   </div>
-                  <p style={{ fontSize: '13px' }}>
-                    Resolves relative imports and builds cross-file dependency maps dynamically displayed via standard GitHub-compatible Mermaid diagrams.
+                  <p style={{ fontSize: '13px', color: 'var(--on-surface-variant)', lineHeight: '1.6' }}>
+                    Resolves relative imports and builds cross-file dependency maps dynamically displayed via standard GitHub-compatible Mermaid diagrams and file explorer.
                   </p>
                 </div>
               </div>
@@ -753,7 +820,7 @@ function App() {
 
           {/* Loader/Progress states */}
           {(jobStatus === 'pending' || jobStatus === 'running') && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '16px', position: 'relative', zIndex: 1 }}>
               <RefreshCw className="spin" style={{ color: 'var(--primary)', width: '48px', height: '48px', animation: 'spin 1.5s linear infinite' }} />
               <div style={{ textAlign: 'center' }}>
                 <h3 style={{ fontWeight: '600' }}>
@@ -774,7 +841,7 @@ function App() {
 
           {/* Done rendering tab */}
           {jobStatus === 'done' && (
-            <div style={{ maxWidth: '900px', margin: '0 auto', height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ maxWidth: '900px', margin: '0 auto', height: '100%', display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
               {activeTab === 'chat' ? (
                 <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '12px', paddingBottom: '20px' }}>
                   {chatHistory.length > 0 && (
@@ -1263,6 +1330,194 @@ function FileInspector({ file }) {
         </div>
       )}
     </div>
+  );
+}
+
+// ── Fluid Gradient WebGL Animation Component ────────────────────────────────
+
+function FluidGradient({ theme }) {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const c = canvasRef.current;
+    if (!c) return;
+    const gl = c.getContext('webgl');
+    if (!gl) return;
+
+    const vs = `attribute vec4 p;void main(){gl_Position=p;}`;
+
+    const colorsDark = `
+      vec3 cCyan  =vec3(0.3529,0.8667,0.6667);
+      vec3 cYellow=vec3(0.0549,0.0824,0.0667);
+      vec3 cOrange=vec3(0.8667,0.8941,0.8706);
+      vec3 cPurple=vec3(0.7373,0.7922,0.7529);
+      vec3 cBlue  =vec3(0.0863,0.1137,0.0980);
+    `;
+
+    const colorsLight = `
+      vec3 cCyan  =vec3(0.0000,0.4235,0.2980);
+      vec3 cYellow=vec3(0.9569,0.9686,0.9608);
+      vec3 cOrange=vec3(0.0510,0.0824,0.0667);
+      vec3 cPurple=vec3(0.2275,0.2784,0.2510);
+      vec3 cBlue  =vec3(0.9412,0.9608,0.9490);
+    `;
+
+    const colorDefinitions = theme === 'dark' ? colorsDark : colorsLight;
+
+    const fs = `
+      precision highp float;
+      uniform vec2 u_resolution;
+      uniform float u_time;
+      uniform vec2 u_mouse;
+
+      vec3 mod289(vec3 x){return x-floor(x*(1./289.))*289.;}
+      vec2 mod289(vec2 x){return x-floor(x*(1./289.))*289.;}
+      vec3 permute(vec3 x){return mod289(((x*34.)+1.)*x);}
+      float snoise(vec2 v){
+          const vec4 C=vec4(.211324865405187,.366025403784439,-.577350269189626,.024390243902439);
+          vec2 i=floor(v+dot(v,C.yy));
+          vec2 x0=v-i+dot(i,C.xx);
+          vec2 i1=(x0.x>x0.y)?vec2(1.,0.):vec2(0.,1.);
+          vec4 x12=x0.xyxy+C.xxzz;
+          x12.xy-=i1;
+          i=mod289(i);
+          vec3 pv=permute(permute(i.y+vec3(0.,i1.y,1.))+i.x+vec3(0.,i1.x,1.));
+          vec3 m=max(.5-vec3(dot(x0,x0),dot(x12.xy,x12.xy),dot(x12.zw,x12.zw)),0.);
+          m=m*m;m=m*m;
+          vec3 x=2.*fract(pv*C.www)-1.;
+          vec3 h=abs(x)-.5;
+          vec3 ox=floor(x+.5);
+          vec3 a0=x-ox;
+          m*=1.79284291400159-.85373472095314*(a0*a0+h*h);
+          vec3 g;
+          g.x=a0.x*x0.x+h.x*x0.y;
+          g.yz=a0.yz*x12.xz+h.yz*x12.yw;
+          return 130.*dot(m,g);
+      }
+
+      void main(){
+          vec2 st=gl_FragCoord.xy/u_resolution.xy;
+          vec2 asp=st; asp.x*=u_resolution.x/u_resolution.y;
+          float t=u_time*0.0900;
+          
+          // Hover interaction: push fluid coordinates away from cursor (deflection)
+          vec2 m_asp = u_mouse;
+          m_asp.x *= u_resolution.x/u_resolution.y;
+          vec2 m_dir = asp - m_asp;
+          float m_dist = length(m_dir);
+          float m_influence = smoothstep(0.45, 0.0, m_dist);
+          vec2 warp_offset = m_dir * m_influence * 0.28;
+          
+          vec2 uv=st;
+          float w1=snoise((asp - warp_offset)*1.6000+vec2(t*.4,t*.3));
+          float w2=snoise((asp - warp_offset)*2.1280-vec2(t*.2,t*.5));
+          uv.x+=w1*0.3200 - warp_offset.x;
+          uv.y+=w2*0.3200 - warp_offset.y;
+
+          ${colorDefinitions}
+    
+          float n1=snoise(uv*1.2+vec2(t,0.))*.5+.5;
+          float n2=snoise(uv*1.5-vec2(0.,t*.6))*.5+.5;
+          float n3=snoise(uv*1.3+vec2(-t*.5,t*.3))*.5+.5;
+
+          vec3 bg=mix(cCyan,cBlue,clamp(uv.x+n1*.4,0.,1.));
+          bg=mix(bg,cYellow,smoothstep(.2,.9,n2*(1.2-uv.x)*uv.y));
+          bg=mix(bg,cPurple,smoothstep(.1,.8,n1*uv.x*(1.1-uv.y)));
+          bg=mix(bg,cOrange,smoothstep(.3,1.,n3*(1.-uv.y)*uv.x*1.5));
+          
+          // Subtly lift color near cursor without oversaturating (reduced brightness)
+          bg += mix(cCyan, cYellow, sin(t)*0.5+0.5) * m_influence * 0.05;
+
+          float grain=fract(sin(dot(gl_FragCoord.xy+u_time*100.,vec2(12.9898,78.233)))*43758.5453123);
+          gl_FragColor=vec4(bg+(grain-.5)*0.0500,1.);
+      }
+    `;
+
+    function sh(t, src) {
+      const s = gl.createShader(t);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      return s;
+    }
+
+    const prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs));
+    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs));
+    gl.linkProgram(prog);
+
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([1, -1, -1, -1, 1, 1, -1, 1]), gl.STATIC_DRAW);
+
+    const ap = gl.getAttribLocation(prog, 'p');
+    const ur = gl.getUniformLocation(prog, 'u_resolution');
+    const ut = gl.getUniformLocation(prog, 'u_time');
+    const um = gl.getUniformLocation(prog, 'u_mouse');
+
+    let mx = 0.5, my = 0.5, tx = 0.5, ty = 0.5;
+
+    const handleMouseMove = (e) => {
+      const rect = c.getBoundingClientRect();
+      tx = (e.clientX - rect.left) / rect.width;
+      ty = 1 - (e.clientY - rect.top) / rect.height;
+    };
+
+    const handleTouchMove = (e) => {
+      if (e.touches.length) {
+        const rect = c.getBoundingClientRect();
+        const t = e.touches[0];
+        tx = (t.clientX - rect.left) / rect.width;
+        ty = 1 - (t.clientY - rect.top) / rect.height;
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+
+    const t0 = Date.now();
+    let animationFrameId;
+
+    function draw() {
+      if (c.width !== c.clientWidth || c.height !== c.clientHeight) {
+        c.width = c.clientWidth;
+        c.height = c.clientHeight;
+      }
+      gl.viewport(0, 0, c.width, c.height);
+      gl.useProgram(prog);
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.vertexAttribPointer(ap, 2, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(ap);
+      gl.uniform2f(ur, c.width, c.height);
+      gl.uniform1f(ut, (Date.now() - t0) / 1000);
+      mx += (tx - mx) * 0.08;
+      my += (ty - my) * 0.08;
+      gl.uniform2f(um, mx, my);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      animationFrameId = requestAnimationFrame(draw);
+    }
+
+    draw();
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [theme]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 0,
+        pointerEvents: 'none',
+        opacity: 0.85
+      }}
+    />
   );
 }
 

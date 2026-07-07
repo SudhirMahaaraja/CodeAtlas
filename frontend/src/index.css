@@ -252,6 +252,12 @@ input:focus, select:focus, textarea:focus {
   transition: var(--transition-smooth);
 }
 
+[data-theme="dark"] .card {
+  background-color: rgba(22, 29, 25, 0.65) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
 .card:hover {
   border-color: var(--primary);
 }
@@ -433,15 +439,14 @@ button:disabled, .btn:disabled {
   color: var(--on-primary) !important;
 }
 
-/* Navigation Header Styles */
+/* Navigation Header Styles (3-Column Layout with Dock) */
 .nav-header {
-  padding: 16px 24px;
+  padding: 12px 24px;
   border-bottom: 1px solid var(--outline-variant);
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   background-color: var(--surface-container-lowest);
-  flex-wrap: wrap;
   gap: 16px;
 }
 
@@ -449,31 +454,92 @@ button:disabled, .btn:disabled {
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
-}
-
-.nav-tabs {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
+  justify-self: start;
 }
 
 .nav-actions {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  justify-self: end;
+}
+
+/* macOS-Style Floating Dock */
+.nav-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(22, 29, 25, 0.45); /* Transparent surface color */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 6px 10px;
+  border-radius: var(--rounded-full);
+  border: 1px solid var(--outline-variant);
+  gap: 6px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  justify-self: center;
+}
+
+[data-theme="light"] .nav-tabs {
+  background: rgba(240, 245, 242, 0.45);
+  box-shadow: 0 4px 20px rgba(0, 108, 76, 0.04);
+}
+
+.nav-tabs button {
+  background: transparent !important;
+  border: none !important;
+  border-radius: var(--rounded-full) !important;
+  padding: 8px 16px;
+  color: var(--on-surface-variant);
+  position: relative;
+  font-weight: 600;
+  font-size: 13px;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, color 0.2s ease;
+  transform-origin: bottom center;
+  box-shadow: none !important;
+}
+
+.nav-tabs button:hover {
+  transform: translateY(-2px) scale(1.06);
+  color: var(--primary) !important;
+  background-color: var(--surface-container-low) !important;
+}
+
+/* Active tab style with indicator dot below */
+.nav-tabs button.primary {
+  color: var(--primary) !important;
+  background-color: var(--surface-container-high) !important;
+}
+
+.nav-tabs button.primary::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: var(--rounded-full);
+  background-color: var(--primary);
+}
+
+.nav-tabs button.secondary {
+  color: var(--on-surface-variant);
 }
 
 /* Responsive Media Queries for Header */
 @media (max-width: 900px) {
   .nav-header {
+    display: flex;
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
   }
   
-  .nav-header-left, .nav-tabs, .nav-actions {
-    justify-content: center;
+  .nav-header-left, .nav-actions {
+    justify-self: center;
   }
 }
 
@@ -481,4 +547,16 @@ button:disabled, .btn:disabled {
 .tree-node:hover {
   background-color: var(--surface-container-low);
   color: var(--primary) !important;
+}
+
+/* Landing Page Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
