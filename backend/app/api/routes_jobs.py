@@ -146,62 +146,154 @@ async def chat_codebase(job_id: str, request: ChatRequest):
             if context_file or context_class or context_func:
                 break
                 
-    # ── Rule-based router ─────────────────────────────────────────────────────
+    # ── Rule-based router and advanced query engine ───────────────────────────
     answer = None
     sources = []
     
-    is_followup = any(w in query for w in ["it", "its", "this", "describe", "explain", "detail", "more", "functions", "methods", "classes", "loc", "lines", "imports", "code", "show", "list"])
-    
-    if is_followup:
-        # Class follow-up
-        if context_class and any(w in query for w in ["method", "methods", "function", "functions"]):
-            for f in files:
+    # ── 1. Frontend / UI Specific Router ──────────────────────────────────────
+    frontend_keywords = {"frontend", "ui", "component", "components", "css", "style", "styles", "styling", "layout", "visual", "react", "view", "page", "pages", "color", "theme", "button", "buttons", "template", "templates", "jsx", "html"}
+    import re
+    query_words = set(re.findall(r'\b\w+\b', query))
+    if any(k in query_words for k in frontend_keywords):
+        # Scan files for frontend components, templates, and styles
+        react_components = []
+        css_selectors = []
+        html_details = []
+        js_files = []
+        css_files = []
+        html_files = []
+        
+        for f in files:
+            lang = f.get("language", "").lower()
+            path = f.get("path", "")
+            
+            if lang in ("javascript", "typescript"):
+                js_files.append(path)
+                # Look for capitalized functions which usually represent React components
+                for fn in f.get("functions", []):
+                    name = fn.get("name", "")
+                    if name and name[0].isupper():
+                        react_components.append({
+                            "name": name,
+                            "path": path,
+                            "line": fn.get("line_number", 1),
+                            "doc": fn.get("docstring") or "React component"
+                        })
+                # Also check classes (could be class components)
                 for cls in f.get("classes", []):
-                    if cls["name"].lower() == context_class.lower():
-                        methods_str = ", ".join([f"`{m['name']}`" for m in cls.get("methods", [])]) if cls.get("methods") else "none"
-                        answer = f"The class `{cls['name']}` has the following methods:\n\n{methods_str}"
-                        sources = [f["path"]]
-                        break
-                if answer:
-                    break
+                    name = cls.get("name", "")
+                    if name and name[0].isupper():
+                        react_components.append({
+                            "name": name,
+                            "path": path,
+                            "line": cls.get("line_number", 1),
+                            "doc": cls.get("docstring") or "Class React Component"
+                        })
+            elif lang == "css":
+                css_files.append(path)
+                # Selectors are stored in 'imports' of css file
+                for selector in f.get("imports", []):
+                    css_selectors.append({
+                        "selector": selector,
+                        "path": path
+                    })
+            elif lang == "html":
+                html_files.append(path)
+                # Forms/links in HTML are mapped to 'imports'
+                html_details.append({
+                    "path": path,
+                    "doc": f.get("module_docstring") or "HTML Template"
+                })
+                
+        # Build a beautiful, comprehensive response about frontend UI structure
+        ui_sections = []
+        ui_sections.append("### 🎨 Frontend UI & Style Architecture")
+        
+        if not js_files and not css_files and not html_files:
+            ui_sections.append("No dedicated frontend assets (JavaScript, HTML, CSS) were identified in this analysis.")
+        else:
+            ui_sections.append(f"The project includes frontend assets across **{len(js_files)}** JS/TS files, **{len(css_files)}** stylesheets, and **{len(html_files)}** HTML documents.")
+            
+            if react_components:
+                ui_sections.append("\n**React/UI Components:**")
+                for comp in react_components[:12]:
+                    ui_sections.append(f"- `{comp['name']}` (defined in [{comp['path']}#L{comp['line']}]) - *{comp['doc']}*")
+                if len(react_components) > 12:
+                    ui_sections.append(f"- *and {len(react_components) - 12} more components...*")
                     
-        # File follow-up
-        if not answer and context_file:
-            for f in files:
-                if f["path"].lower() == context_file.lower() or os.path.basename(f["path"]).lower() == context_file.lower():
-                    if any(w in query for w in ["function", "functions", "method", "methods"]):
-                        funcs_str = "\n".join([f"- `{fn['name']}` (line {fn['line_number']})" for fn in f.get("functions", [])]) if f.get("functions") else "No global functions defined."
-                        answer = f"### ⚙️ Functions in [{f['path']}]\nHere are the functions defined in this file:\n\n{funcs_str}"
-                        sources = [f["path"]]
-                        break
-                    elif any(w in query for w in ["class", "classes"]):
-                        classes_str = "\n".join([f"- `{c['name']}` (line {c['line_number']})" for c in f.get("classes", [])]) if f.get("classes") else "No classes defined."
-                        answer = f"### 🏛️ Classes in [{f['path']}]\nHere are the classes defined in this file:\n\n{classes_str}"
-                        sources = [f["path"]]
-                        break
-                    elif any(w in query for w in ["import", "imports"]):
-                        imports_str = "\n".join([f"- `{imp}`" for imp in f.get("imports", [])]) if f.get("imports") else "No imports."
-                        answer = f"### 📦 Imports in [{f['path']}]\nThis file imports the following modules:\n\n{imports_str}"
-                        sources = [f["path"]]
-                        break
-                    elif any(w in query for w in ["loc", "line", "lines"]):
-                        answer = f"The file [{f['path']}] has **{f['loc']}** lines of code (LOC)."
-                        sources = [f["path"]]
+            if css_selectors:
+                ui_sections.append("\n**Key Stylesheets & Custom Classes:**")
+                for path in css_files[:3]:
+                    selectors_in_file = [s['selector'] for s in css_selectors if s['path'] == path]
+                    selectors_str = ", ".join([f"`{s}`" for s in selectors_in_file[:10]])
+                    ui_sections.append(f"- **[{path}]**: Styles defined for {selectors_str}")
+                    
+            if html_details:
+                ui_sections.append("\n**HTML Documents & Entry points:**")
+                for html in html_details[:5]:
+                    ui_sections.append(f"- **[{html['path']}]**: *{html['doc']}*")
+                    
+            # Explain how the front-end connects
+            if frameworks:
+                ui_sections.append(f"\n**UI Framework & Integration:** Detects framework **{', '.join(frameworks)}**. The UI coordinates state or queries backend APIs.")
+                
+        answer = "\n".join(ui_sections)
+        sources = js_files[:2] + css_files[:1] + html_files[:1]
+        
+    # ── 2. Enhanced General Codebase Search & Answer Engine ─────────────────────
+    if not answer:
+        # Tokenize query to find relevant matches
+        query_tokens = set([t for t in query.split() if len(t) > 2])
+        is_followup = any(w in query for w in ["it", "its", "this", "describe", "explain", "detail", "more", "functions", "methods", "classes", "loc", "lines", "imports", "code", "show", "list"])
+        
+        # Check standard follow-up patterns first
+        if is_followup:
+            # Class follow-up
+            if context_class and any(w in query for w in ["method", "methods", "function", "functions"]):
+                for f in files:
+                    for cls in f.get("classes", []):
+                        if cls["name"].lower() == context_class.lower():
+                            methods_str = ", ".join([f"`{m['name']}`" for m in cls.get("methods", [])]) if cls.get("methods") else "none"
+                            answer = f"The class `{cls['name']}` has the following methods:\n\n{methods_str}"
+                            sources = [f["path"]]
+                            break
+                    if answer:
                         break
                         
-    # Standard router rules (if not follow-up, or follow-up did not match anything)
-    if not answer:
-        # 1. Dependency Queries
-        dep_keywords = ["dependency", "dependencies", "package", "packages", "library", "libraries", "pip", "npm", "requirements"]
-        if any(k in query for k in dep_keywords):
+            # File follow-up
+            if not answer and context_file:
+                for f in files:
+                    if f["path"].lower() == context_file.lower() or os.path.basename(f["path"]).lower() == context_file.lower():
+                        if any(w in query for w in ["function", "functions", "method", "methods"]):
+                            funcs_str = "\n".join([f"- `{fn['name']}` (line {fn['line_number']})" for fn in f.get("functions", [])]) if f.get("functions") else "No global functions defined."
+                            answer = f"### ⚙️ Functions in [{f['path']}]\nHere are the functions defined in this file:\n\n{funcs_str}"
+                            sources = [f["path"]]
+                            break
+                        elif any(w in query for w in ["class", "classes"]):
+                            classes_str = "\n".join([f"- `{c['name']}` (line {c['line_number']})" for c in f.get("classes", [])]) if f.get("classes") else "No classes defined."
+                            answer = f"### 🏛️ Classes in [{f['path']}]\nHere are the classes defined in this file:\n\n{classes_str}"
+                            sources = [f["path"]]
+                            break
+                        elif any(w in query for w in ["import", "imports"]):
+                            imports_str = "\n".join([f"- `{imp}`" for imp in f.get("imports", [])]) if f.get("imports") else "No imports."
+                            answer = f"### 📦 Imports in [{f['path']}]\nThis file imports the following modules:\n\n{imports_str}"
+                            sources = [f["path"]]
+                            break
+                        elif any(w in query for w in ["loc", "line", "lines"]):
+                            answer = f"The file [{f['path']}] has **{f['loc']}** lines of code (LOC)."
+                            sources = [f["path"]]
+                            break
+                            
+        # Dependency check
+        if not answer and any(k in query for k in ["dependency", "dependencies", "package", "packages", "library", "libraries", "pip", "npm", "requirements"]):
             if not dependencies:
                 answer = "No dependencies or package lists were detected in this codebase."
             else:
                 dep_list_str = "\n".join([f"- **{d['name']}** (version: `{d.get('version') or '*'}`) - via *{d.get('source')}*" for d in dependencies])
                 answer = f"### 📦 Detected Dependencies ({len(dependencies)})\nHere are the third-party libraries and packages used in this project:\n\n{dep_list_str}"
                 
-        # 1.5. File/Files Overview Queries
-        elif any(k in query for k in ["file", "files", "overview", "structure", "tree", "catalog", "directory"]):
+        # Files overview
+        elif not answer and any(k in query for k in ["file", "files", "overview", "structure", "tree", "catalog", "directory"]):
             if not files:
                 answer = "No files were detected in this codebase."
             else:
@@ -210,8 +302,8 @@ async def chat_codebase(job_id: str, request: ChatRequest):
                     file_list_str += f"\n- *and {len(files) - 25} more files...*"
                 answer = f"### 📁 Codebase Files Overview ({len(files)} files)\nHere are the files detected in this codebase:\n\n{file_list_str}"
                 
-        # 2. API Routes / Endpoints Queries
-        elif any(k in query for k in ["route", "routes", "endpoint", "endpoints", "api", "url", "urls", "path", "http"]):
+        # API Routes
+        elif not answer and any(k in query for k in ["route", "routes", "endpoint", "endpoints", "api", "url", "urls", "path", "http"]):
             routes = []
             for f in files:
                 for fn in f.get("functions", []):
@@ -238,16 +330,16 @@ async def chat_codebase(job_id: str, request: ChatRequest):
                 answer = f"### 🔌 API Routes & Endpoints ({len(routes)})\nI found the following API request handlers in the codebase:\n\n{routes_str}"
                 sources = list(set([r["file"] for r in routes[:3]]))
                 
-        # 3. Stack / Frameworks Detections
-        elif any(k in query for k in ["framework", "frameworks", "stack", "technology", "technologies", "django", "flask", "fastapi", "react", "vue"]):
+        # Technology Stack
+        elif not answer and any(k in query for k in ["framework", "frameworks", "stack", "technology", "technologies", "django", "flask", "fastapi", "react", "vue"]):
             if not frameworks:
                 answer = "This appears to be a standard utility codebase. No major web frameworks (like FastAPI, Django, Flask, or React) were identified."
             else:
                 fw_list_str = "\n".join([f"- **{fw}**" for fw in frameworks])
                 answer = f"### 🛠️ Technology Stack\nThis codebase relies on the following frameworks/technologies:\n\n{fw_list_str}"
                 
-        # 3.1. Entry Points / Running
-        elif any(k in query for k in ["entry", "run", "start", "main", "launch", "execute", "executable"]):
+        # Entry points
+        elif not answer and any(k in query for k in ["entry", "run", "start", "main", "launch", "execute", "executable"]):
             entry_points = project_model.get("entry_points", [])
             found_entries = []
             for f in files:
@@ -263,8 +355,8 @@ async def chat_codebase(job_id: str, request: ChatRequest):
                 answer = f"### 🚀 Project Entry Points\nTo run or initialize this project, you should execute or target these entry-level files:\n\n{entries_str}"
                 sources = all_entries[:3]
 
-        # 3.2. Project Size & LOC Metrics
-        elif any(k in query for k in ["loc", "lines", "size", "metrics", "count", "how big", "statistics"]):
+        # Size Metrics
+        elif not answer and any(k in query for k in ["loc", "lines", "size", "metrics", "count", "how big", "statistics"]):
             lang_breakdown = {}
             total_loc = 0
             for f in files:
@@ -283,8 +375,8 @@ async def chat_codebase(job_id: str, request: ChatRequest):
                 f"**Language breakdown:**\n{breakdown_str}"
             )
 
-        # 3.3. Architecture & Import Relationships
-        elif any(k in query for k in ["architecture", "structure", "import graph", "imports", "topology", "relationship", "relations", "core module"]):
+        # Architecture & import relationships
+        elif not answer and any(k in query for k in ["architecture", "structure", "import graph", "imports", "topology", "relationship", "relations", "core module"]):
             import_graph = project_model.get("import_graph", {})
             indegree = {}
             for source, targets in import_graph.items():
@@ -305,14 +397,33 @@ async def chat_codebase(job_id: str, request: ChatRequest):
                     f"You can view the full visual architecture topology in the standard GitHub-compatible Mermaid diagrams in the README."
                 )
                 sources = [m[0] for m in sorted_imports[:3]]
-                
-        # 4. Specific File Query
-        else:
+
+        # Custom Search / Fallback
+        if not answer:
+            # 1. Direct name matches (Files, Classes, Functions)
             matched_file = None
+            matched_class = None
+            matched_func = None
+            def_file = ""
+            
             for f in files:
                 fname = os.path.basename(f["path"]).lower()
                 if fname in query:
                     matched_file = f
+                    break
+                    
+            for f in files:
+                for cls in f.get("classes", []):
+                    if cls["name"].lower() in query:
+                        matched_class = cls
+                        def_file = f["path"]
+                        break
+                for fn in f.get("functions", []):
+                    if fn["name"].lower() in query:
+                        matched_func = fn
+                        def_file = f["path"]
+                        break
+                if matched_class or matched_func:
                     break
                     
             if matched_file:
@@ -331,95 +442,120 @@ async def chat_codebase(job_id: str, request: ChatRequest):
                     f"**Overview details:**\n> {doc}"
                 )
                 sources = [matched_file["path"]]
+            elif matched_class:
+                methods_str = ", ".join([f"`{m['name']}`" for m in matched_class.get("methods", [])]) if matched_class.get("methods") else "none"
+                answer = (
+                    f"### 🏛️ Class: `{matched_class['name']}`\n"
+                    f"- **Defined in:** [{def_file}#L{matched_class['line_number']}]\n"
+                    f"- **Inherits from:** {', '.join(matched_class.get('base_classes', [])) or 'None'}\n"
+                    f"- **Methods:** {methods_str}\n\n"
+                    f"**Description:**\n> {matched_class.get('docstring') or 'No class description.'}"
+                )
+                sources = [def_file]
+            elif matched_func:
+                args_str = ", ".join([f"`{p['name']}`" for p in matched_func.get("params", [])]) if matched_func.get("params") else "none"
+                answer = (
+                    f"### ⚙️ Function: `{matched_func['name']}`\n"
+                    f"- **Defined in:** [{def_file}#L{matched_func['line_number']}]\n"
+                    f"- **Async:** `{matched_func.get('is_async', False)}`\n"
+                    f"- **Parameters:** {args_str}\n"
+                    f"- **Return type:** `{matched_func.get('return_type') or 'Any'}`\n\n"
+                    f"**Description:**\n> {matched_func.get('docstring') or 'No description available.'}"
+                )
+                sources = [def_file]
                 
-            # 5. Class / Symbol / Function Search
-            else:
-                matched_class = None
-                matched_func = None
-                def_file = ""
+            # 2. General Query matching logic (BM25 token match / smart retrieval)
+            if not answer and query_tokens:
+                rankings = []
                 for f in files:
-                    for cls in f.get("classes", []):
-                        if cls["name"].lower() in query:
-                            matched_class = cls
-                            def_file = f["path"]
-                            break
-                    for fn in f.get("functions", []):
-                        if fn["name"].lower() in query:
-                            matched_func = fn
-                            def_file = f["path"]
-                            break
-                    if matched_class or matched_func:
-                        break
-                        
-                if matched_class:
-                    methods_str = ", ".join([f"`{m['name']}`" for m in matched_class.get("methods", [])]) if matched_class.get("methods") else "none"
-                    answer = (
-                        f"### 🏛️ Class: `{matched_class['name']}`\n"
-                        f"- **Defined in:** [{def_file}#L{matched_class['line_number']}]\n"
-                        f"- **Inherits from:** {', '.join(matched_class.get('base_classes', [])) or 'None'}\n"
-                        f"- **Methods:** {methods_str}\n\n"
-                        f"**Description:**\n> {matched_class.get('docstring') or 'No class description.'}"
-                    )
-                    sources = [def_file]
-                elif matched_func:
-                    args_str = ", ".join([f"`{p['name']}`" for p in matched_func.get("params", [])]) if matched_func.get("params") else "none"
-                    answer = (
-                        f"### ⚙️ Function: `{matched_func['name']}`\n"
-                        f"- **Defined in:** [{def_file}#L{matched_func['line_number']}]\n"
-                        f"- **Async:** `{matched_func.get('is_async', False)}`\n"
-                        f"- **Parameters:** {args_str}\n"
-                        f"- **Return type:** `{matched_func.get('return_type') or 'Any'}`\n\n"
-                        f"**Description:**\n> {matched_func.get('docstring') or 'No description available.'}"
-                    )
-                    sources = [def_file]
+                    score = 0
+                    path_lower = f["path"].lower()
+                    doc_lower = (f.get("module_docstring") or "").lower()
                     
-    # 6. Fallback BM25-like search over docstrings and paths
-    if not answer:
-        query_tokens = set([t for t in query.split() if len(t) > 2])
-        if not query_tokens:
-            answer = "Could you please elaborate on your question? You can ask me about dependencies, routes, technologies, or details of specific files/classes/functions in this codebase."
-        else:
-            rankings = []
-            for f in files:
-                score = 0
-                path_lower = f["path"].lower()
-                doc_lower = (f.get("module_docstring") or "").lower()
-                
-                for token in query_tokens:
-                    if token in path_lower:
-                        score += 5
-                    if token in doc_lower:
-                        score += 2
-                        
-                    for cls in f.get("classes", []):
-                        if token in cls["name"].lower():
+                    # Accumulate scores based on token matches in path, docs, classes, functions, and parameters
+                    matched_items = []
+                    
+                    for token in query_tokens:
+                        if token in path_lower:
+                            score += 10
+                            matched_items.append(f"file path `{f['path']}`")
+                        if token in doc_lower:
                             score += 4
-                        if token in (cls.get("docstring") or "").lower():
-                            score += 1
-                    for fn in f.get("functions", []):
-                        if token in fn["name"].lower():
-                            score += 4
-                        if token in (fn.get("docstring") or "").lower():
-                            score += 1
+                            matched_items.append("module documentation")
                             
-                if score > 0:
-                    rankings.append((score, f))
-                    
-            rankings.sort(key=lambda x: x[0], reverse=True)
-            if rankings:
-                top_matches = rankings[:3]
-                match_str = ""
-                for score, f in top_matches:
-                    match_str += f"- **[{f['path']}]** ({f['language']}, {f['loc']} LOC) - Relevance Score: {score}\n"
-                    if f.get("module_docstring"):
-                        short_doc = f["module_docstring"].split(".")[0][:120] + "..."
-                        match_str += f"  *Overview:* {short_doc}\n"
+                        for cls in f.get("classes", []):
+                            cname = cls["name"].lower()
+                            cdoc = (cls.get("docstring") or "").lower()
+                            if token in cname:
+                                score += 8
+                                matched_items.append(f"class `{cls['name']}`")
+                            if token in cdoc:
+                                score += 3
+                                matched_items.append(f"docstring of `{cls['name']}`")
+                                
+                        for fn in f.get("functions", []):
+                            fname = fn["name"].lower()
+                            fdoc = (fn.get("docstring") or "").lower()
+                            if token in fname:
+                                score += 8
+                                matched_items.append(f"function `{fn['name']}`")
+                            if token in fdoc:
+                                score += 3
+                                matched_items.append(f"docstring of `{fn['name']}`")
+                                
+                            for param in fn.get("params", []):
+                                if token in param["name"].lower():
+                                    score += 2
+                                    matched_items.append(f"parameter `{param['name']}` in `{fn['name']}`")
+                                    
+                        # Handle CSS selectors for stylesheet files
+                        if f.get("language") == "css":
+                            for selector in f.get("imports", []):
+                                if token in selector.lower():
+                                    score += 6
+                                    matched_items.append(f"CSS selector `{selector}`")
+                                    
+                    if score > 0:
+                        rankings.append({
+                            "score": score,
+                            "file": f,
+                            "matched_reasons": list(set(matched_items))
+                        })
                         
-                answer = f"### 🔍 Relevant Codebase Matches\nI matched your question with these files in the codebase:\n\n{match_str}"
-                sources = [f["path"] for _, f in top_matches]
-                
-    if not answer:
-        answer = "I couldn't find any direct matches in the codebase for your question. Try asking about:\n- Specific files (e.g. `main.py`)\n- Class/Function names\n- Routes, stack, dependencies, or lines of code."
+                rankings.sort(key=lambda x: x["score"], reverse=True)
+                if rankings:
+                    top_matches = rankings[:4]
+                    results_lines = []
+                    results_lines.append(f"### 🔍 Search results matching your query")
+                    results_lines.append(f"I found the following matching items and files in the codebase:\n")
+                    
+                    for idx, item in enumerate(top_matches, 1):
+                        f = item["file"]
+                        reasons = ", ".join(item["matched_reasons"][:3])
+                        loc_info = f"({f.get('language', '').upper()}, {f.get('loc', 0)} LOC)"
+                        results_lines.append(f"{idx}. **[{f['path']}]** {loc_info}")
+                        results_lines.append(f"   - *Matches found in:* {reasons}")
+                        
+                        # Add docstring snippets if available
+                        doc = f.get("module_docstring")
+                        if doc:
+                            short_doc = doc.split(".")[0][:120] + "..."
+                            results_lines.append(f"   - *Overview:* {short_doc}")
+                            
+                        # Add classes / functions list if relevant
+                        if f.get("classes"):
+                            class_names = ", ".join([f"`{c['name']}`" for c in f["classes"][:5]])
+                            results_lines.append(f"   - *Classes:* {class_names}")
+                        if f.get("functions"):
+                            func_names = ", ".join([f"`{fn['name']}`" for fn in f["functions"][:8]])
+                            results_lines.append(f"   - *Functions:* {func_names}")
+                        results_lines.append("")
+                        
+                    answer = "\n".join(results_lines)
+                    sources = [item["file"]["path"] for item in top_matches]
+                    
+        if not answer:
+            answer = "I couldn't find any direct matches in the codebase for your question. Try asking about:\n- Specific files (e.g. `main.py`)\n- Class/Function/Component names\n- Frontend UI styling, CSS classes, or React components\n- Routes, stack, dependencies, or lines of code."
 
     # ── NDJSON Streaming Generator ───────────────────────────────────────────
     async def event_generator():

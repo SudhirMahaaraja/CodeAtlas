@@ -113,6 +113,16 @@ function App() {
   const [chatLoading, setChatLoading] = useState(false);
   const chatEndRef = useRef(null);
 
+  // Explorer states
+  const [selectedExplorerFile, setSelectedExplorerFile] = useState(null);
+
+  const handleExplorerFileClick = (path) => {
+    const file = jobDetails?.project_model?.files?.find(f => f.path === path);
+    if (file) {
+      setSelectedExplorerFile(file);
+    }
+  };
+
   // Auto-scroll chat history
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -490,8 +500,7 @@ function App() {
                   className="primary"
                   disabled={loading || !githubUrl || (jobStatus && jobStatus !== 'done' && jobStatus !== 'error')}
                   style={{
-                    justifyContent: 'center',
-                    color: theme === 'dark' ? '#151615ff' : 'var(--on-primary)'
+                    justifyContent: 'center'
                   }}
                 >
                   <GitBranch size={16} />
@@ -603,15 +612,8 @@ function App() {
       {/* Main Workspace Panel */}
       <div className="main-content">
         {/* Navigation & Status Header */}
-        <div style={{
-          padding: '16px 24px',
-          borderBottom: '1px solid var(--outline-variant)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          backgroundColor: 'var(--surface-container-lowest)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="nav-header">
+          <div className="nav-header-left">
             {leftSidebarCollapsed && (
               <button
                 className="secondary"
@@ -623,7 +625,7 @@ function App() {
               </button>
             )}
             {jobStatus === 'done' ? (
-              <div style={{ display: 'flex', gap: '12px' }}>
+              <div className="nav-tabs">
                 <button
                   className={activeTab === 'readme' ? 'primary' : 'secondary'}
                   onClick={() => setActiveTab('readme')}
@@ -645,6 +647,13 @@ function App() {
                   <MessageSquare size={16} />
                   Chat Assistant
                 </button>
+                <button
+                  className={activeTab === 'explorer' ? 'primary' : 'secondary'}
+                  onClick={() => setActiveTab('explorer')}
+                >
+                  <FolderOpen size={16} />
+                  File Explorer
+                </button>
               </div>
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -654,7 +663,7 @@ function App() {
             )}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="nav-actions">
             {jobStatus === 'done' && (
               <>
                 <button className="secondary" onClick={downloadReadme} title="Download README.md only" style={{ gap: '6px' }}>
@@ -809,6 +818,7 @@ function App() {
                       chatHistory.map((msg, idx) => (
                         <div
                           key={idx}
+                          className={`chat-bubble ${msg.role}`}
                           style={{
                             alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
                             maxWidth: '85%',
@@ -852,6 +862,47 @@ function App() {
                       Send
                     </button>
                   </form>
+                </div>
+              ) : activeTab === 'explorer' ? (
+                <div style={{ display: 'flex', gap: '24px', height: '100%', minHeight: '500px' }}>
+                  {/* Left: Interactive File Tree */}
+                  <div style={{
+                    width: '320px',
+                    backgroundColor: 'var(--surface-container-lowest)',
+                    border: '1px solid var(--outline-variant)',
+                    borderRadius: 'var(--rounded-lg)',
+                    padding: '20px',
+                    overflowY: 'auto',
+                    maxHeight: '70vh'
+                  }}>
+                    <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', color: 'var(--on-surface)' }}>Repository Tree</h3>
+                    <FileTree 
+                      files={jobDetails?.project_model?.files || []} 
+                      onFileClick={handleExplorerFileClick}
+                      selectedPath={selectedExplorerFile?.path}
+                    />
+                  </div>
+                  
+                  {/* Right: File Details Inspector */}
+                  <div style={{
+                    flex: 1,
+                    backgroundColor: 'var(--surface-container-lowest)',
+                    border: '1px solid var(--outline-variant)',
+                    borderRadius: 'var(--rounded-lg)',
+                    padding: '24px',
+                    overflowY: 'auto',
+                    maxHeight: '70vh'
+                  }}>
+                    {selectedExplorerFile ? (
+                      <FileInspector file={selectedExplorerFile} />
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--outline)', minHeight: '300px' }}>
+                        <FolderOpen style={{ color: 'var(--primary)', opacity: 0.8, marginBottom: '12px' }} />
+                        <h4 style={{ color: 'var(--on-surface)', fontWeight: '600' }}>Select a file</h4>
+                        <p style={{ fontSize: '13px' }}>Click a file in the repository tree to inspect its structural definitions, classes, functions, and docstrings.</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <div
@@ -989,6 +1040,226 @@ function App() {
               </div>
             </div>
           )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── File Tree Helper Functions & Components ─────────────────────────────────
+
+function buildTreeStructure(files) {
+  const tree = {};
+  files.forEach(f => {
+    const parts = f.path.split('/');
+    let current = tree;
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      if (i === parts.length - 1) {
+        current[part] = null;
+      } else {
+        if (!current[part]) {
+          current[part] = {};
+        }
+        current = current[part];
+      }
+    }
+  });
+  return tree;
+}
+
+function FileTreeNode({ name, node, path, onFileClick, selectedPath }) {
+  const [isOpen, setIsOpen] = useState(true);
+  const isDirectory = node !== null;
+
+  if (isDirectory) {
+    return (
+      <div style={{ marginLeft: '12px', marginTop: '4px' }}>
+        <div 
+          onClick={() => setIsOpen(!isOpen)}
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px', 
+            padding: '6px 8px', 
+            borderRadius: 'var(--rounded-default)',
+            cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: '600',
+            color: 'var(--on-surface)',
+            userSelect: 'none',
+            transition: 'var(--transition-smooth)'
+          }}
+          className="tree-node"
+        >
+          <FolderOpen size={14} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
+        </div>
+        {isOpen && (
+          <div style={{ borderLeft: '1px solid var(--outline-variant)', marginLeft: '14px', paddingLeft: '4px' }}>
+            {Object.keys(node).map(key => (
+              <FileTreeNode 
+                key={key} 
+                name={key} 
+                node={node[key]} 
+                path={path ? `${path}/${key}` : key}
+                onFileClick={onFileClick}
+                selectedPath={selectedPath}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  } else {
+    const isSelected = selectedPath === path;
+    return (
+      <div style={{ marginLeft: '12px', marginTop: '4px' }}>
+        <div 
+          onClick={() => onFileClick(path)}
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px', 
+            padding: '6px 8px', 
+            borderRadius: 'var(--rounded-default)',
+            cursor: 'pointer',
+            fontSize: '13px',
+            color: isSelected ? 'var(--primary)' : 'var(--on-surface-variant)',
+            backgroundColor: isSelected ? 'var(--surface-container-high)' : 'transparent',
+            userSelect: 'none',
+            transition: 'var(--transition-smooth)'
+          }}
+          className="tree-node"
+        >
+          <FileText size={14} style={{ color: isSelected ? 'var(--primary)' : 'var(--outline)', flexShrink: 0 }} />
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
+        </div>
+      </div>
+    );
+  }
+}
+
+function FileTree({ files, onFileClick, selectedPath }) {
+  const tree = React.useMemo(() => buildTreeStructure(files), [files]);
+  
+  return (
+    <div style={{ marginLeft: '-12px' }}>
+      {Object.keys(tree).map(key => (
+        <FileTreeNode 
+          key={key} 
+          name={key} 
+          node={tree[key]} 
+          path={key}
+          onFileClick={onFileClick}
+          selectedPath={selectedPath}
+        />
+      ))}
+    </div>
+  );
+}
+
+function FileInspector({ file }) {
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--outline-variant)', paddingBottom: '16px', marginBottom: '20px' }}>
+        <div>
+          <h3 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--on-surface)' }}>{file.path.split('/').pop()}</h3>
+          <span style={{ fontSize: '12px', color: 'var(--outline)' }}>{file.path}</span>
+        </div>
+        <span style={{ 
+          fontSize: '11px', 
+          fontWeight: '600', 
+          padding: '4px 10px', 
+          borderRadius: 'var(--rounded-full)', 
+          backgroundColor: 'var(--surface-container-high)',
+          color: 'var(--on-surface)',
+          textTransform: 'uppercase'
+        }}>
+          {file.language} • {file.loc} LOC
+        </span>
+      </div>
+
+      {file.module_docstring && (
+        <div style={{ marginBottom: '24px' }}>
+          <h4 className="label-caps" style={{ marginBottom: '8px' }}>Module Documentation</h4>
+          <div style={{ padding: '14px', borderRadius: 'var(--rounded-default)', backgroundColor: 'var(--surface-container-low)', fontSize: '13px', fontStyle: 'italic', lineHeight: '1.6' }}>
+            {file.module_docstring}
+          </div>
+        </div>
+      )}
+
+      {file.imports && file.imports.length > 0 && (
+        <div style={{ marginBottom: '24px' }}>
+          <h4 className="label-caps" style={{ marginBottom: '8px' }}>Imports / Selectors</h4>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            {file.imports.map((imp, idx) => (
+              <span key={idx} style={{ padding: '4px 8px', borderRadius: 'var(--rounded-sm)', backgroundColor: 'var(--surface-container-low)', fontSize: '12px', fontFamily: 'var(--font-code)' }}>
+                {imp}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {file.classes && file.classes.length > 0 && (
+        <div style={{ marginBottom: '24px' }}>
+          <h4 className="label-caps" style={{ marginBottom: '12px' }}>Classes ({file.classes.length})</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {file.classes.map((cls, idx) => (
+              <div key={idx} style={{ border: '1px solid var(--outline-variant)', borderRadius: 'var(--rounded-default)', padding: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--on-surface)' }}>class {cls.name}</span>
+                  {cls.base_classes && cls.base_classes.length > 0 && (
+                    <span style={{ fontSize: '12px', color: 'var(--outline)' }}>({cls.base_classes.join(', ')})</span>
+                  )}
+                  <span style={{ fontSize: '11px', color: 'var(--outline)', marginLeft: 'auto' }}>Line {cls.line_number}</span>
+                </div>
+                {cls.docstring && (
+                  <p style={{ fontSize: '12px', color: 'var(--on-surface-variant)', fontStyle: 'italic', marginBottom: '12px' }}>
+                    {cls.docstring}
+                  </p>
+                )}
+                {cls.methods && cls.methods.length > 0 && (
+                  <div>
+                    <h5 style={{ fontSize: '11px', fontWeight: '700', color: 'var(--outline)', textTransform: 'uppercase', marginBottom: '6px' }}>Methods</h5>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', paddingLeft: '8px' }}>
+                      {cls.methods.map((method, mIdx) => (
+                        <div key={mIdx} style={{ fontSize: '13px' }}>
+                          <span style={{ fontWeight: '600', color: 'var(--primary)' }}>{method.name}</span>
+                          <span style={{ color: 'var(--outline)' }}>({method.params.map(p => p.name).join(', ')})</span>
+                          {method.return_type && <span style={{ color: 'var(--primary)' }}> -&gt; {method.return_type}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {file.functions && file.functions.length > 0 && (
+        <div>
+          <h4 className="label-caps" style={{ marginBottom: '12px' }}>Functions ({file.functions.length})</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {file.functions.map((fn, idx) => (
+              <div key={idx} style={{ border: '1px solid var(--outline-variant)', borderRadius: 'var(--rounded-default)', padding: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--primary)' }}>{fn.name}</span>
+                  <span style={{ color: 'var(--outline)', fontSize: '13px' }}>({fn.params.map(p => p.name).join(', ')})</span>
+                  {fn.return_type && <span style={{ color: 'var(--primary)', fontSize: '13px' }}> -&gt; {fn.return_type}</span>}
+                  <span style={{ fontSize: '11px', color: 'var(--outline)', marginLeft: 'auto' }}>Line {fn.line_number}</span>
+                </div>
+                {fn.docstring && (
+                  <p style={{ fontSize: '12px', color: 'var(--on-surface-variant)', fontStyle: 'italic' }}>
+                    {fn.docstring}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

@@ -38,7 +38,7 @@
   --on-surface-variant: #bccac0;
   --inverse-surface: #dde4de;
   --inverse-on-surface: #2b322e;
-  --outline: #86948b;
+  --outline: #9cb2a4;
   --outline-variant: #3d4a43;
   --surface-tint: #5addaa;
   --primary: #5addaa;
@@ -75,7 +75,7 @@
   --on-surface-variant: #3a4740;
   --inverse-surface: #0d1511;
   --inverse-on-surface: #ebf1ee;
-  --outline: #6a7870;
+  --outline: #55635b;
   --outline-variant: #cad3ce;
   --surface-tint: #006c4c;
   --primary: #006c4c;
@@ -221,6 +221,10 @@ button.secondary {
 button.secondary:hover {
   background-color: var(--surface-container-high);
   border-color: var(--primary);
+}
+
+button *, .btn * {
+  color: inherit !important;
 }
 
 input, select, textarea {
@@ -393,4 +397,88 @@ input:focus, select:focus, textarea:focus {
   background-color: var(--outline-variant);
   border: none;
   margin: 36px 0;
+}
+
+/* Global Link Contrast Corrections */
+a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+  transition: var(--transition-smooth);
+}
+
+a:hover {
+  text-decoration: underline;
+  opacity: 0.85;
+}
+
+/* Input Placeholder Contrast Corrections */
+input::placeholder, textarea::placeholder {
+  color: var(--outline);
+  opacity: 1;
+}
+
+/* Disabled Button Contrast & States */
+button:disabled, .btn:disabled {
+  background-color: var(--surface-container-high) !important;
+  color: var(--outline) !important;
+  border-color: var(--outline-variant) !important;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* User Chat Bubble Text Contrast Override */
+.chat-bubble.user * {
+  color: var(--on-primary) !important;
+}
+
+/* Navigation Header Styles */
+.nav-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--outline-variant);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--surface-container-lowest);
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.nav-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.nav-tabs {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Responsive Media Queries for Header */
+@media (max-width: 900px) {
+  .nav-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .nav-header-left, .nav-tabs, .nav-actions {
+    justify-content: center;
+  }
+}
+
+/* File Tree Node Interactive States */
+.tree-node:hover {
+  background-color: var(--surface-container-low);
+  color: var(--primary) !important;
 }
