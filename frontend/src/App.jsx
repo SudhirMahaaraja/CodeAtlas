@@ -37,8 +37,10 @@ customRenderer.code = (code, lang) => {
   return `<pre><code class="language-${lang || ''}">${code}</code></pre>`;
 };
 
-// API Base URL - update if backend runs on a different port
-const API_BASE_URL = 'http://localhost:8000';
+// API Base URL - switches automatically between local and Render production backend
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:8000'
+  : 'https://codeatlas-qpeg.onrender.com';
 
 
 function App() {
