@@ -88,6 +88,8 @@ def test_chatbot_endpoints():
     }
     jobs_col.insert_one(mock_job)
 
+    import json
+
     # Test frontend UI query
     response = client.post("/api/jobs/test-job-id/chat", json={
         "question": "Tell me about the frontend UI components and styles",
@@ -96,9 +98,10 @@ def test_chatbot_endpoints():
     assert response.status_code == 200
     # Stream response
     content = b"".join(response.iter_bytes()).decode("utf-8")
-    assert "Frontend UI & Style Architecture" in content
-    assert "App" in content
-    assert "styles.css" in content
+    reconstructed = "".join(json.loads(line)["token"] for line in content.strip().split("\n") if line.strip() and "token" in json.loads(line))
+    assert "Frontend UI & Style Architecture" in reconstructed
+    assert "App" in reconstructed
+    assert "styles.css" in reconstructed
 
     # Test dependency query
     response = client.post("/api/jobs/test-job-id/chat", json={
@@ -107,7 +110,8 @@ def test_chatbot_endpoints():
     })
     assert response.status_code == 200
     content = b"".join(response.iter_bytes()).decode("utf-8")
-    assert "fastapi" in content
+    reconstructed = "".join(json.loads(line)["token"] for line in content.strip().split("\n") if line.strip() and "token" in json.loads(line))
+    assert "fastapi" in reconstructed
 
     # Test custom token search
     response = client.post("/api/jobs/test-job-id/chat", json={
@@ -116,8 +120,9 @@ def test_chatbot_endpoints():
     })
     assert response.status_code == 200
     content = b"".join(response.iter_bytes()).decode("utf-8")
-    assert "read_root" in content
-    assert "main.py" in content
+    reconstructed = "".join(json.loads(line)["token"] for line in content.strip().split("\n") if line.strip() and "token" in json.loads(line))
+    assert "read_root" in reconstructed
+    assert "main.py" in reconstructed
 
     # Test "files overview" query (checking that "overview" doesn't trigger "view" in frontend router)
     response = client.post("/api/jobs/test-job-id/chat", json={
@@ -126,8 +131,9 @@ def test_chatbot_endpoints():
     })
     assert response.status_code == 200
     content = b"".join(response.iter_bytes()).decode("utf-8")
-    assert "Codebase Files Overview" in content
-    assert "main.py" in content
-    assert "Frontend UI & Style Architecture" not in content
+    reconstructed = "".join(json.loads(line)["token"] for line in content.strip().split("\n") if line.strip() and "token" in json.loads(line))
+    assert "Codebase Files Overview" in reconstructed
+    assert "main.py" in reconstructed
+    assert "Frontend UI & Style Architecture" not in reconstructed
 
 

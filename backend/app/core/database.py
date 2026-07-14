@@ -1,4 +1,7 @@
 import logging
+import json
+import os
+import tempfile
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 from backend.app.core.config import settings
@@ -10,6 +13,28 @@ class Database:
     db = None
     use_fallback: bool = False
     _fallback_store: dict = {}
+    _fallback_file: str = os.path.join(tempfile.gettempdir(), "codeatlas_db_fallback.json")
+
+    @classmethod
+    def _load_fallback(cls):
+        if os.path.exists(cls._fallback_file):
+            try:
+                with open(cls._fallback_file, "r") as f:
+                    cls._fallback_store = json.load(f)
+                logger.info(f"Loaded fallback database from {cls._fallback_file}")
+            except Exception as e:
+                logger.error(f"Failed to load fallback database: {e}")
+                cls._fallback_store = {}
+        else:
+            cls._fallback_store = {}
+
+    @classmethod
+    def _save_fallback(cls):
+        try:
+            with open(cls._fallback_file, "w") as f:
+                json.dump(cls._fallback_store, f)
+        except Exception as e:
+            logger.error(f"Failed to save fallback database: {e}")
 
     @classmethod
     def connect(cls):
@@ -26,7 +51,7 @@ class Database:
         except (ConnectionFailure, ServerSelectionTimeoutError, Exception) as e:
             logger.warning(f"MongoDB connection failed: {e}. Falling back to in-memory store.")
             cls.use_fallback = True
-            cls._fallback_store = {}
+            cls._load_fallback()
 
     @classmethod
     def get_collection(cls, name: str):
@@ -42,6 +67,7 @@ class FallbackCollection:
         self.name = name
         if name not in self.store:
             self.store[name] = {}
+            Database._save_fallback()
 
     def insert_one(self, doc: dict):
         if "_id" not in doc:
@@ -50,6 +76,7 @@ class FallbackCollection:
         key = str(doc["_id"])
         # Store a copy
         self.store[self.name][key] = dict(doc)
+        Database._save_fallback()
         class InsertResult:
             def __init__(self, inserted_id):
                 self.inserted_id = inserted_id
@@ -75,6 +102,7 @@ class FallbackCollection:
         if doc and "$set" in update:
             doc.update(update["$set"])
             self.store[self.name][str(doc["_id"])] = doc
+            Database._save_fallback()
         class UpdateResult:
             def __init__(self):
                 self.modified_count = 1
