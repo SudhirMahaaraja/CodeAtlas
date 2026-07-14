@@ -20,13 +20,15 @@ class Database:
         if os.path.exists(cls._fallback_file):
             try:
                 with open(cls._fallback_file, "r") as f:
-                    cls._fallback_store = json.load(f)
+                    data = json.load(f)
+                cls._fallback_store.clear()
+                cls._fallback_store.update(data)
                 logger.info(f"Loaded fallback database from {cls._fallback_file}")
             except Exception as e:
                 logger.error(f"Failed to load fallback database: {e}")
-                cls._fallback_store = {}
+                cls._fallback_store.clear()
         else:
-            cls._fallback_store = {}
+            cls._fallback_store.clear()
 
     @classmethod
     def _save_fallback(cls):
@@ -65,11 +67,13 @@ class FallbackCollection:
     def __init__(self, store: dict, name: str):
         self.store = store
         self.name = name
+        Database._load_fallback()
         if name not in self.store:
             self.store[name] = {}
             Database._save_fallback()
 
     def insert_one(self, doc: dict):
+        Database._load_fallback()
         if "_id" not in doc:
             import uuid
             doc["_id"] = str(uuid.uuid4())
@@ -83,6 +87,7 @@ class FallbackCollection:
         return InsertResult(key)
 
     def find_one(self, query: dict):
+        Database._load_fallback()
         # Handle simple query by _id
         if "_id" in query:
             return self.store[self.name].get(str(query["_id"]))
@@ -97,6 +102,7 @@ class FallbackCollection:
         return None
 
     def update_one(self, query: dict, update: dict):
+        Database._load_fallback()
         # Handle simple $set operations
         doc = self.find_one(query)
         if doc and "$set" in update:
